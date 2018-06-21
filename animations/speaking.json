@@ -1,0 +1,33 @@
+{
+    "animation":{
+        "id": "speaking",
+        "type" : "state",
+        "sprites" : {
+            "body" : {
+                "mode" : "static",
+                "sprite_name" : "linto"
+            },
+            "eyes" : {
+                "mode" : "bouncing",
+                "sprite_name" : "eyes_idle"
+            },
+            "mouth" : {
+                "mode" : "animated",
+                "sprite_name" : "mouths"
+            },
+            "token_right" : {
+                "mode" : "none"
+            },
+            "token_center" : {
+                "mode" : "none"
+            },
+            "token_left" : {
+                "mode" : "none"
+            },
+            "center" : {
+                "mode" : "none"
+            }
+        }
+
+    }
+}

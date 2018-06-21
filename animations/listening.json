@@ -1,0 +1,33 @@
+{
+    "animation":{
+        "id": "listening",
+        "type" : "state",
+        "sprites" : {
+            "body" : {
+                "mode" : "static",
+                "sprite_name" : "linto"
+            },
+            "eyes" : {
+                "mode" : "bouncing",
+                "sprite_name" : "eyes_big"
+            },
+            "mouth" : {
+                "mode" : "bouncing",
+                "sprite_name" : "mouth_smile3"
+            },
+            "token_right" : {
+                "mode" : "none"
+            },
+            "token_center" : {
+                "mode" : "none"
+            },
+            "token_left" : {
+                "mode" : "none"
+            },
+            "center" : {
+                "mode" : "none"
+            }
+        }
+
+    }
+}

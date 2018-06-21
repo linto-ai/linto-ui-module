@@ -1,0 +1,35 @@
+{
+    "broker_msg":{
+        "wuw": {
+            "wuw-spotted":{
+                "display": "happy"
+            }
+        },
+        "utterance": {
+            "utterance_start":{
+                "display" : "listening"
+            },
+            "utterance_end" :{
+                "display": "idle"
+            }
+        },
+        "tts": {
+            "any": {
+                "display": "speaking"
+            } 
+        }
+    },
+
+    "touch_input":{
+
+    },
+
+    "internal" : {
+        "connecting": {
+            "display" : "com"
+        },
+        "connected": {
+            "display" : "idle"
+        }
+    }
+}

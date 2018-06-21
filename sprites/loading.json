@@ -1,0 +1,8 @@
+{
+    "info":{
+        "name" : "loading",
+        "nb_frames" : "7", 
+        "frame_width" : "519", 
+        "frame_duration" : "10"
+    }
+}
