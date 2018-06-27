@@ -1,0 +1,9 @@
+{
+    "idle" : "idle",
+    "listening" : "listening",
+    "sleeping" : "sleeping",
+    "speaking" : "speaking",
+    "com" : "com",
+    "loading" : "loading",
+    "happy" : "happy"
+}

@@ -14,26 +14,6 @@ import tenacity
 import json
 from pgelement import *
 
-class State(Enum):
-    IDLE = 'idle'
-    LISTENING = 'listening'
-    SLEEPING = 'sleeping'
-    SPEAKING = 'speaking'
-    COM = 'com'
-    LOADING = 'loading'
-    HAPPY = 'happy'
-
-class Event(Enum):
-    WUW = 'wuw'
-    ERROR = 'error'
-    MUTED = 'muted'
-    UNMUTED = 'unmuted'
-    SILENCED = 'silenced'
-    UNSILENCED = 'unsilenced'
-
-class Input_type(Enum):
-    BROKER_MSG = 0
-    TOUCH_INPUT = 1
 
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 
@@ -59,7 +39,7 @@ class Animation:
             #Load animation info
             self.type = json_manifest['animation']['type']
             if self.type in ['timed']:
-                self.duration = int(json_manifest['animation']['duration']) * FPS
+                self.duration = json_manifest['animation']['duration'] * FPS
         except FileNotFoundError:
             logging.warning("Could not load animation manifest file %s" % manifest_path)
             return
@@ -134,8 +114,10 @@ class Linto_UI:
     def load_animations(self, dir):
         self.animations = dict()
         logging.debug("Loading animations")
+        with open('animations_manifest.json', 'r') as f:
+            manifest = json.load(f)
         #loading states
-        for state in [e.value for e in State]:
+        for state in manifest.keys():
             anim = Animation(self.screen, os.path.join(dir, state + '.json'), self.all_sprites, self.render_sprites, self.back_to_state)
             self.animations[state] = anim
 
