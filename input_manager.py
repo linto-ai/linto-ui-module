@@ -16,7 +16,7 @@ from pgelement import *
 
 
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
-
+draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
 FPS = 15
 class Animation:
     def __init__(self, screen, manifest_path, all_sprites, render_group, end_loop_callback: callable):
@@ -47,13 +47,14 @@ class Animation:
         self.isState = True if json_manifest['animation']['type'] == 'state' else False
         # Check or create sprites for each placeholder
         
-        for sprite_ph in json_manifest['animation']['sprites'].keys():
+        for sprite_ph in draw_order:
             sprite_info = json_manifest['animation']['sprites'][sprite_ph]
             sprite_type = sprites_dict[sprite_info['mode']]
             if sprite_type is None:
                 continue
             sprite_name = sprite_info['sprite_name']
             # check if exist
+            logging.debug("Adding sprite %s" % sprite_name)
             try:
                 sprite = next(s for s in self.all_sprites if isinstance(s, sprite_type) and s.img_name == sprite_name)
             except:
@@ -70,9 +71,11 @@ class Animation:
     def play(self, callback=None):
         if len(self.render_group) > 0:
             self.render_group.empty()
+        print('has sprite', [sprite.img_name for sprite in self.sprites])
         for sprite in [sprite for sprite in self.sprites if isinstance(sprite, Animated_Sprite)]:
             sprite.frame_counter = 0
         self.render_group.add(self.sprites)
+        print('has sprite', [sprite.img_name for sprite in self.render_group.sprites()])
     
 class Linto_UI:
     def __init__(self, manifest_path: str, args):
@@ -86,7 +89,7 @@ class Linto_UI:
         self.silenced = False
 
         self.all_sprites = pg.sprite.Group()
-        self.render_sprites = pg.sprite.Group()
+        self.render_sprites = pg.sprite.OrderedUpdates()
         self.buttons_all = pg.sprite.Group()
         self.buttons_visible = pg.sprite.Group()
         self.background_sprites = pg.sprite.Group()
