@@ -13,7 +13,7 @@
             },
             "mouth" : {
                 "mode" : "animated",
-                "sprite_name" : "mouths"
+                "sprite_name" : "mouth_talking"
             },
             "token_right" : {
                 "mode" : "none"

@@ -1,0 +1,8 @@
+{
+    "info":{
+        "name" : "think",
+        "nb_frames" : "5", 
+        "frame_width" : "297", 
+        "frame_duration" : "10"
+    }
+}

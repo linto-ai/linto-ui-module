@@ -64,8 +64,10 @@ class Bouncing_Sprite(Sprite):
             self.rect.y +=self.dir
 
 class Rotating_Ring(Sprite):
-    def __init__(self, img_name):
+    def __init__(self, img_name, size):
         Sprite.__init__(self,img_name)
+        self.image = pg.transform.scale(self.image, size)
+        self.rect = self.image.get_rect()
 
     def update(self):
         self.angle = (self.angle + 3) % 360
@@ -116,5 +118,48 @@ class Animated_Sprite(Sprite):
             self.curr_frame = (self.curr_frame + 1) % self.nb_frames
             self.image = self.frames[self.curr_frame]
             
-            
+class Button(Sprite):
+    def __init__(self, img_name, event_manager):
+        Sprite.__init__(self,img_name)
+        self.event_manager = event_manager
+        self.id = img_name
+        self.state = 0
+        self._read_manifest()
 
+    def _read_manifest(self):
+        manifest_name = "sprites/" + self.img_name + '.json'
+        with open(manifest_name, 'r') as f:
+            self.manifest = json.load(f)
+        self.id = self.manifest['info']['name']
+        self.frame_width = self.manifest['info']['frame_width']
+        self.nb_frames = self.manifest['info']['nb_frames']
+        self.type = self.manifest['info']['type']
+        self.frames = []
+        for i in range(self.nb_frames):
+            frame = self.image.subsurface((i*self.frame_width, 0, self.frame_width, self.rect.h))
+            self.frames.append(frame)
+        self.image = self.frames[self.state]
+
+    def clicked(self):
+        if self.type == 'on-off':
+            self.state = not self.state
+            self.image = self.frames[self.state]
+            self.event_manager.touch_input(self.id, "on" if self.state else "off")
+
+    def set_rect(self, screen, rect, center=True):
+        screen_size = screen.get_rect().size
+        new_rect = [v * rect[i] for i,v in enumerate(screen_size+screen_size)]
+        print('--->', new_rect)
+        for i, f in enumerate(self.frames):
+            self.frames[i] = pg.transform.scale(f, [int(v) for v in new_rect[2:]])
+            self.set_pos(new_rect[:2], center=center)
+            offset_x = 0
+            offset_y = 0
+            if center:
+                offset_x += self.frames[i].get_rect().w/2
+                offset_y += self.frames[i].get_rect().h/2
+            self.rect.x = new_rect[0] - offset_x
+            self.rect.y = new_rect[1] - offset_y
+            
+            self.image = self.frames[self.state]
+            print(self.image)

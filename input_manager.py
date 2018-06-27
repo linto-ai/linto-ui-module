@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # # -*- coding: utf-8 -*-
-import os
+import os, sys
 from threading import Thread
+import subprocess
 from enum import Enum
 import logging
 import time
@@ -35,8 +36,7 @@ class Input_type(Enum):
     TOUCH_INPUT = 1
 
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
-place_holder = ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
-place_holder_rect = [[0.5,0.5,0.7,0.7], [0.5,0.44,0.25,0.1], [0.5,0.6,0.2,0.05],[0.65,0.10,0.15,0.15] , [], [], [0.5,0.5,0.4,0.2] ]
+
 FPS = 30
 class Animation:
     def __init__(self, screen, manifest_path, all_sprites, render_group, end_loop_callback: callable):
@@ -52,6 +52,8 @@ class Animation:
     def load_manifest(self, manifest_path):
         try:
             json_manifest = json.load(open(manifest_path, 'r'))
+            placeholder_man = json.load(open("placeholders.json", 'r'))
+            placeholder_man = placeholder_man['placeholders']
             self.id = json_manifest['animation']['id']
             logging.debug("Loading %s animation" % self.id) 
             #Load animation info
@@ -65,7 +67,7 @@ class Animation:
         self.isState = True if json_manifest['animation']['type'] == 'state' else False
         # Check or create sprites for each placeholder
         
-        for i,sprite_ph in enumerate(place_holder):
+        for sprite_ph in json_manifest['animation']['sprites'].keys():
             sprite_info = json_manifest['animation']['sprites'][sprite_ph]
             sprite_type = sprites_dict[sprite_info['mode']]
             if sprite_type is None:
@@ -78,31 +80,36 @@ class Animation:
                 # If not create it
                 if self.type in ['one-time']:
                     sprite = sprite_type(sprite_name, callback=self.end_loop_callback)
-
                 else:
                     sprite = sprite_type(sprite_name)
-                sprite.set_rect(self.screen,place_holder_rect[i], center=True)
+                sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
                 self.all_sprites.add(sprite)
             finally:
                 self.sprites.append(sprite)
 
     def play(self, callback=None):
-        self.render_group.empty()
+        if len(self.render_group) > 0:
+            self.render_group.empty()
+        for sprite in [sprite for sprite in self.sprites if isinstance(sprite, Animated_Sprite)]:
+            sprite.frame_counter = 0
         self.render_group.add(self.sprites)
     
 class Linto_UI:
     def __init__(self, manifest_path: str, args):
-        self.screen = self.init_gui([1024 ,1024])
-        self.screen_width = 1024
-        self.screen_height = 1024
+        self.screen_width = 480
+        self.screen_height = 480
         self.screen_size = [self.screen_width, self.screen_height]
+        self.screen = self.init_gui(self.screen_size)
         self.center_pos = [v//2 for v in self.screen_size]
         self.frame_counter = 0
         self.anim_end = None
+        self.silenced = False
 
         self.all_sprites = pg.sprite.Group()
         self.background_sprites = pg.sprite.Group()
         self.render_sprites = pg.sprite.Group()
+        self.buttons_all = pg.sprite.Group()
+        self.buttons_visible = pg.sprite.Group()
 
         self.init_background_sprites()
         self.load_animations('animations')
@@ -110,16 +117,18 @@ class Linto_UI:
         self.play_anim('loading')
         self.event_manager = Event_Manager(self)
         self.event_manager.start()
+        self.load_button()
         
 
     def init_gui(self,resolution):
         pg.display.init()
-        pg.font.init()
+        #pg.font.init()
+        pg.mixer.quit()
         print("using resolution: ",resolution)
-        return pg.display.set_mode(resolution,pg.NOFRAME)
+        return pg.display.set_mode(resolution,pg.NOFRAME|pg.HWSURFACE)
 
     def init_background_sprites(self):
-        self.ring = Rotating_Ring('ring')
+        self.ring = Rotating_Ring('ring', self.screen_size)
         self.background_sprites.add(self.ring)
 
     def load_animations(self, dir):
@@ -129,6 +138,20 @@ class Linto_UI:
         for state in [e.value for e in State]:
             anim = Animation(self.screen, os.path.join(dir, state + '.json'), self.all_sprites, self.render_sprites, self.back_to_state)
             self.animations[state] = anim
+
+    def load_button(self):
+        logging.debug("Loading Buttons")
+        with open('buttons_manifest.json', 'r') as f:
+            manifest = json.load(f)
+        self.buttons_placeholder = manifest['placeholder']
+        self.buttons = {}
+        for button in manifest['button'].keys():
+            self.buttons[button] = Button(button, self.event_manager)
+            self.buttons[button].set_rect(self.screen, self.buttons_placeholder[manifest['button'][button]['placeholder']])
+            self.buttons[button].visible = manifest['button'][button]['visible']
+            if self.buttons[button].visible :
+                self.buttons_visible.add(self.buttons[button])
+            self.buttons_all.add(self.buttons[button])
 
     def play_anim(self, anim_name):
         animation = self.animations[anim_name]
@@ -147,6 +170,7 @@ class Linto_UI:
 
     def run(self):
         clock = pg.time.Clock()
+        mouse_sprite = pg.sprite.Sprite()
         while True:
             if self.anim_end != None:
                 self.frame_counter +=1
@@ -159,14 +183,23 @@ class Linto_UI:
             self.background_sprites.draw(self.screen)
             self.render_sprites.update()
             self.render_sprites.draw(self.screen)
-            pg.display.update()
-           
-            clock.tick(FPS)
+            self.buttons_visible.update()
+            self.buttons_visible.draw(self.screen)
+            pg.display.flip()
+
+            for event in pg.event.get():
+                if event.type in [pg.MOUSEBUTTONUP]:
+                    mouse_sprite.rect = pg.Rect(event.pos[0]-1, event.pos[1]-1, 2,2)
+                    collided = pg.sprite.spritecollide(mouse_sprite, self.buttons_visible, False)
+                    for sprite in collided:
+                        sprite.clicked()
+            clock.tick(30)
 
 class Event_Manager(Thread):
     def __init__(self, ui: Linto_UI):
         Thread.__init__(self)
         self.ui = ui
+        self.load_manifest()
 
     def load_manifest(self):
         with open("event_binding.json", 'r') as f:
@@ -182,43 +215,67 @@ class Event_Manager(Thread):
         try:
             broker = mqtt.Client()
             broker.on_connect = self._on_broker_connect
-            broker.connect("localhost", 8889, 0)
+            broker.connect("localhost", 1883, 0)
             broker.on_disconnect = self._on_broker_disconnect
             broker.on_message = self._on_broker_msg
             return broker
         except:
             logging.warning("Failed to connect to broker (Retrying after 5s)")
+            self.ui.play_anim('com')
             return None
 
     def _on_broker_connect(self, client, userdata, flags, rc):
         logging.debug("Connected to broker")
+        for topic in self.event_binding['broker_msg'].keys():
+                self.broker.subscribe(topic)
         self.ui.play_anim('idle')
     
     def _on_broker_disconnect(self, client, userdata, rc):
         logging.debug("Disconnection")
         self.broker.disconnect()
+        self.broker = None
     
     def _on_broker_msg(self, client, userdata, message):
         topic = message.topic
         msg = message.payload.decode("utf-8")
         logging.debug("Received message %s on topic %s" % (msg,topic))
-        if msg in self.event_binding['broker_msg'][topic].keys():
-            anim = self.event_binding['broker_msg'][topic][msg]['display']
-        elif 'any' in self.event_binding['broker_msg'][topic].keys():
-            anim = self.event_binding['broker_msg'][topic]['any']['display']
-        else:
-            logging.debug("No matching action for message %s on topic %s" % (msg,topic))
-            return
-        self.ui.play_anim(anim)
+        if msg not in self.event_binding['broker_msg'][topic].keys():
+            if 'any' in self.event_binding['broker_msg'][topic].keys():
+                msg = 'any'
+            else:
+                logging.debug("No matching action for message %s on topic %s" % (msg,topic))
+                return  
+        for action in self.event_binding['broker_msg'][topic][msg].keys():
+            if action == 'display':                        
+                self.ui.play_anim(self.event_binding['broker_msg'][topic][msg]["display"])
+            elif action == 'publish' and self.broker is not None:
+                self.broker.publish(self.event_binding['broker_msg'][topic][msg]["publish"]['topic'],
+                                    self.event_binding['broker_msg'][topic][msg]["publish"]['message'])
+            elif action == 'sound' and self.ui.silenced != True:
+                self.play_sound(self.event_binding['broker_msg'][topic][msg]["sound"])
 
+
+    def touch_input(self, button, value):
+        logging.debug('Touch: %s -> %s' % (button, value))
+        if button in self.event_binding['touch_input'].keys():
+            if value in self.event_binding['touch_input'][button].keys():
+                for action in self.event_binding['touch_input'][button][value].keys():
+                    if action == 'display':                        
+                        self.ui.play_anim(self.event_binding['touch_input'][button][value]["display"])
+                    elif action == 'publish' and self.broker is not None:
+                        self.broker.publish(self.event_binding['touch_input'][button][value]["publish"]['topic'],
+                                            self.event_binding['touch_input'][button][value]["publish"]['message'])
+                    elif action == 'sound' and self.ui.silenced != True:
+                        self.play_sound(self.event_binding['touch_input'][button][value]["sound"]['name'])
+
+    def play_sound(self, name):
+        logging.debug("playing sound")
+        subprocess.call(['aplay', os.path.dirname(os.path.abspath(__file__)) + '/sounds/'+ name +'.wav'])
 
     def run(self):
         while True:
             self.ui.play_anim('com')
             self.broker = self.broker_connect()
-            self.load_manifest()
-            for key in self.event_binding['broker_msg'].keys():
-                self.broker.subscribe(key)
             self.ui.play_anim('idle')
             self.broker.loop_forever(retry_first_connection=True)
 

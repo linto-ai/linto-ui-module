@@ -9,14 +9,15 @@
             },
             "eyes" : {
                 "mode" : "bouncing",
-                "sprite_name" : "eyes_big"
+                "sprite_name" : "eyes_side"
             },
             "mouth" : {
                 "mode" : "bouncing",
-                "sprite_name" : "mouth_smile3"
+                "sprite_name" : "mouth_side"
             },
             "token_right" : {
-                "mode" : "none"
+                "mode" : "animated",
+                "sprite_name" : "think_in"
             },
             "token_center" : {
                 "mode" : "none"

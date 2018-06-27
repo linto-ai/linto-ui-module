@@ -7,29 +7,59 @@
         },
         "utterance": {
             "utterance_start":{
-                "display" : "listening"
+                "display" : "listening",
+                "sound" : "beep1"
             },
             "utterance_end" :{
+                "display": "idle"
+            },
+            "timeout" : {
                 "display": "idle"
             }
         },
         "tts": {
-            "any": {
+            "speaking_start": {
                 "display": "speaking"
+            },
+            "speaking_stop": {
+                "display": "idle"
             } 
         }
     },
 
     "touch_input":{
-
+        "mute_button":{
+            "on" : {
+                "display": "sleeping",
+                "publish": {
+                    "topic" : "ui_event",
+                    "message" : "mute_on"
+                }
+            },
+            "off" : {
+                "display": "idle",
+                "publish": {
+                    "topic" : "ui_event",
+                    "message" : "mute_off"
+                }
+            }
+        }
     },
 
     "internal" : {
         "connecting": {
-            "display" : "com"
+            "display" : "com",
+            "publish": {
+                "topic" : "ui_event",
+                "message" : "connecting"
+            }
         },
         "connected": {
-            "display" : "idle"
+            "display" : "idle",
+            "publish": {
+                "topic" : "ui_event",
+                "message" : "connected"
+            }
         }
     }
 }
