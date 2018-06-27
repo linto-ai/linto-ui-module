@@ -17,7 +17,7 @@ from pgelement import *
 
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 
-FPS = 30
+FPS = 15
 class Animation:
     def __init__(self, screen, manifest_path, all_sprites, render_group, end_loop_callback: callable):
         self.screen = screen
@@ -86,11 +86,10 @@ class Linto_UI:
         self.silenced = False
 
         self.all_sprites = pg.sprite.Group()
-        self.background_sprites = pg.sprite.Group()
         self.render_sprites = pg.sprite.Group()
         self.buttons_all = pg.sprite.Group()
         self.buttons_visible = pg.sprite.Group()
-
+        self.background_sprites = pg.sprite.Group()
         self.init_background_sprites()
         self.load_animations('animations')
         self.current_state = self.animations['loading']
@@ -105,11 +104,18 @@ class Linto_UI:
         #pg.font.init()
         pg.mixer.quit()
         print("using resolution: ",resolution)
-        return pg.display.set_mode(resolution,pg.NOFRAME|pg.HWSURFACE)
+        return pg.display.set_mode(resolution,pg.NOFRAME)
 
     def init_background_sprites(self):
+        background = pg.Surface(self.screen_size)
+        background.fill((0,0,0))
+        pg.draw.circle(background,(50,50,50),self.center_pos, self.center_pos[0], 0)
+        self.background = pg.sprite.Sprite()
+        self.background.image = background
+        self.background.rect = background.get_rect()
         self.ring = Rotating_Ring('ring', self.screen_size)
-        self.background_sprites.add(self.ring)
+
+        self.background_sprites.add(self.background)
 
     def load_animations(self, dir):
         self.animations = dict()
@@ -159,8 +165,6 @@ class Linto_UI:
                 if self.frame_counter >= self.anim_end:
                     self.back_to_state()
             self.frame_counter+=1
-            self.screen.fill((0,0,0))
-            pg.draw.circle(self.screen,(50,50,50),self.center_pos, self.center_pos[0], 0)
             self.background_sprites.update()
             self.background_sprites.draw(self.screen)
             self.render_sprites.update()
@@ -175,13 +179,17 @@ class Linto_UI:
                     collided = pg.sprite.spritecollide(mouse_sprite, self.buttons_visible, False)
                     for sprite in collided:
                         sprite.clicked()
-            clock.tick(30)
+                if event.type in [pg.KEYUP] and event.key == pg.K_ESCAPE:
+                    self.event_manager.end()
+                    exit()
+            clock.tick(FPS)
 
 class Event_Manager(Thread):
     def __init__(self, ui: Linto_UI):
         Thread.__init__(self)
         self.ui = ui
         self.load_manifest()
+        self.alive = True
 
     def load_manifest(self):
         with open("event_binding.json", 'r') as f:
@@ -205,6 +213,10 @@ class Event_Manager(Thread):
             logging.warning("Failed to connect to broker (Retrying after 5s)")
             self.ui.play_anim('com')
             return None
+    
+    def end(self):
+        self.broker.disconnect()
+        self.alive = False
 
     def _on_broker_connect(self, client, userdata, flags, rc):
         logging.debug("Connected to broker")
@@ -214,7 +226,8 @@ class Event_Manager(Thread):
     
     def _on_broker_disconnect(self, client, userdata, rc):
         logging.debug("Disconnection")
-        self.broker.disconnect()
+        if self.broker is not None:
+            self.broker.disconnect()
         self.broker = None
     
     def _on_broker_msg(self, client, userdata, message):
@@ -255,7 +268,7 @@ class Event_Manager(Thread):
         subprocess.call(['aplay', os.path.dirname(os.path.abspath(__file__)) + '/sounds/'+ name +'.wav'])
 
     def run(self):
-        while True:
+        while self.alive:
             self.ui.play_anim('com')
             self.broker = self.broker_connect()
             self.ui.play_anim('idle')

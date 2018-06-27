@@ -32,7 +32,7 @@ class Sprite(pg.sprite.Sprite):
         self.set_pos(new_rect[:2], center=center)
 
     def rotate_center(self):
-        self.image = pg.transform.rotozoom(self.original_image, self.angle, 1)
+        self.image = pg.transform.rotozoom(self.image, self.angle, 1)
         self.rect = self.image.get_rect(center=self.rect.center)
  
     def set_size(self, new_size):
@@ -61,7 +61,7 @@ class Bouncing_Sprite(Sprite):
             if self.curr_v == self.min:
                 self.dir *= -1
             self.curr_v += self.dir
-            self.rect.y +=self.dir
+            self.rect.y += self.dir
 
 class Rotating_Ring(Sprite):
     def __init__(self, img_name, size):
