@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # # -*- coding: utf-8 -*-
 import os, sys
+import datetime
 from threading import Thread
 import subprocess
 from enum import Enum
@@ -85,8 +86,7 @@ class Linto_UI:
 
     def init_gui(self,resolution, fullscreen: bool):
         pg.display.init()
-        #pg.font.init()
-        pg.mixer.quit()
+        #pg.mouse.set_visible(False)
         print("using resolution: ",resolution)
         return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
 
@@ -158,9 +158,11 @@ class Linto_UI:
             self.buttons_visible.draw(self.screen)
             pg.display.flip()
 
+            # Event manager
             for event in pg.event.get():
                 if event.type in [pg.MOUSEBUTTONUP]:
                     mouse_sprite.rect = pg.Rect(event.pos[0]-1, event.pos[1]-1, 2,2)
+                    print("mouse_sprite", mouse_sprite.rect)
                     collided = pg.sprite.spritecollide(mouse_sprite, self.buttons_visible, False)
                     for sprite in collided:
                         sprite.clicked()
@@ -175,6 +177,7 @@ class Event_Manager(Thread):
         self.ui = ui
         self.load_manifest()
         self.alive = True
+        self.anim_lock = False
 
     def load_manifest(self):
         with open("event_binding.json", 'r') as f:
@@ -200,9 +203,9 @@ class Event_Manager(Thread):
             return None
     
     def end(self):
-        self.broker.disconnect()
         self.alive = False
-
+        self.broker.disconnect()
+        
     def _on_broker_connect(self, client, userdata, flags, rc):
         logging.debug("Connected to broker")
         for topic in self.event_binding['broker_msg'].keys():
@@ -216,6 +219,7 @@ class Event_Manager(Thread):
         self.broker = None
     
     def _on_broker_msg(self, client, userdata, message):
+        #TODO: Modify according to new MQTT message specs
         topic = message.topic
         msg = message.payload.decode("utf-8")
         logging.debug("Received message %s on topic %s" % (msg,topic))
@@ -225,28 +229,36 @@ class Event_Manager(Thread):
             else:
                 logging.debug("No matching action for message %s on topic %s" % (msg,topic))
                 return  
-        for action in self.event_binding['broker_msg'][topic][msg].keys():
-            if action == 'display':                        
-                self.ui.play_anim(self.event_binding['broker_msg'][topic][msg]["display"])
-            elif action == 'publish' and self.broker is not None:
-                self.broker.publish(self.event_binding['broker_msg'][topic][msg]["publish"]['topic'],
-                                    self.event_binding['broker_msg'][topic][msg]["publish"]['message'])
-            elif action == 'sound' and self.ui.silenced != True:
-                self.play_sound(self.event_binding['broker_msg'][topic][msg]["sound"])
-
+        actions = self.event_binding['broker_msg'][topic][msg]
+        self._resolve_action(actions)
+            
 
     def touch_input(self, button, value):
         logging.debug('Touch: %s -> %s' % (button, value))
         if button in self.event_binding['touch_input'].keys():
             if value in self.event_binding['touch_input'][button].keys():
-                for action in self.event_binding['touch_input'][button][value].keys():
-                    if action == 'display':                        
-                        self.ui.play_anim(self.event_binding['touch_input'][button][value]["display"])
-                    elif action == 'publish' and self.broker is not None:
-                        self.broker.publish(self.event_binding['touch_input'][button][value]["publish"]['topic'],
-                                            self.event_binding['touch_input'][button][value]["publish"]['message'])
-                    elif action == 'sound' and self.ui.silenced != True:
-                        self.play_sound(self.event_binding['touch_input'][button][value]["sound"]['name'])
+                actions = self.event_binding['touch_input'][button][value]
+                self._resolve_action(actions)
+
+    def publish(self, topic, msg):
+        # Format message looking for tokens
+        payload = msg.replace("%DATE", datetime.datetime.now().isoformat())
+        logging.debug("Publishing msg %s on topic %s" % (payload, topic))
+        self.broker.publish(topic, payload)
+
+    def _resolve_action(self, actions):
+        if self.anim_lock and "anim_lock" not in actions:
+            return
+        for action in actions.keys():
+            if action == 'display':                        
+                self.ui.play_anim(actions["display"])
+            elif action == 'publish' and self.broker is not None:
+                self.publish(actions["publish"]['topic'],
+                                    actions["publish"]['message'])
+            elif action == 'sound' and self.ui.silenced != True:
+                self.play_sound(actions["sound"])
+            elif action == 'anim_lock':
+                self.anim_lock = actions["anim_lock"]
 
     def play_sound(self, name):
         logging.debug("playing sound")

@@ -79,7 +79,6 @@ class Animated_Sprite(Sprite):
         self.curr_frame = 0
         self.frame_counter = 0
         self._read_manifest()
-        print("=========", self.rect)
         
     def _read_manifest(self):
         manifest_name = "sprites/" + self.img_name + '.json'
@@ -97,9 +96,7 @@ class Animated_Sprite(Sprite):
         
     def set_rect(self,screen, rect, center=False):
         screen_size = screen.get_rect().size
-        print("screen size")
         new_rect = [v * rect[i] for i,v in enumerate(screen_size+screen_size)]
-        print("NEW RECT", new_rect)
         self.rect = pg.Rect(new_rect)
         new_frames = []
         for f in self.frames:
@@ -147,6 +144,7 @@ class Button(Sprite):
             frame = self.image.subsurface((i*self.frame_width, 0, self.frame_width, self.rect.h))
             self.frames.append(frame)
         self.image = self.frames[self.state]
+        self.rect
 
     def clicked(self):
         if self.type == 'on-off':
@@ -157,17 +155,18 @@ class Button(Sprite):
     def set_rect(self, screen, rect, center=True):
         screen_size = screen.get_rect().size
         new_rect = [v * rect[i] for i,v in enumerate(screen_size+screen_size)]
-        print('--->', new_rect)
-        for i, f in enumerate(self.frames):
-            self.frames[i] = pg.transform.scale(f, [int(v) for v in new_rect[2:]])
+        self.rect = pg.Rect(new_rect)
+        new_frames = []
+        for f in self.frames:
+            f = pg.transform.scale(f, [int(v) for v in new_rect[2:]])
             self.set_pos(new_rect[:2], center=center)
             offset_x = 0
             offset_y = 0
             if center:
-                offset_x += self.frames[i].get_rect().w/2
-                offset_y += self.frames[i].get_rect().h/2
+                offset_x += f.get_rect().w/2
+                offset_y += f.get_rect().h/2
             self.rect.x = new_rect[0] - offset_x
             self.rect.y = new_rect[1] - offset_y
-            
-            self.image = self.frames[self.state]
-            print(self.image)
+            new_frames.append(f)
+        self.frames = new_frames
+        self.image = self.frames[0]

@@ -1,29 +1,36 @@
 {
     "broker_msg":{
-        "wuw": {
-            "wuw-spotted":{
+        "wuw/wuw-spotted": {
+            "any":{
                 "display": "happy"
             }
         },
-        "utterance": {
-            "utterance_start":{
+        "utterance/start": {
+            "any":{
                 "display" : "listening",
                 "sound" : "beep1"
-            },
-            "utterance_end" :{
-                "display": "idle"
-            },
-            "timeout" : {
+            }
+        },
+        "utterance/stop" :{
+            "any":{
                 "display": "idle"
             }
         },
-        "tts": {
-            "speaking_start": {
+        "tts/speaking/start": {
+            "any": {
                 "display": "speaking"
-            },
-            "speaking_stop": {
-                "display": "idle"
-            } 
+            }
+        },
+        "tts/speaking/stop" : {
+            "any": {
+                "display" : "idle"
+            }
+        },
+        "ui/connected": {
+
+        },
+        "ui_/disconnected" : {
+
         }
     },
 
@@ -32,34 +39,28 @@
             "on" : {
                 "display": "sleeping",
                 "publish": {
-                    "topic" : "ui_event",
-                    "message" : "mute_on"
-                }
+                    "topic" : "ui/mute_on",
+                    "message" : "{\"on\":\"%DATE\"}"
+                },
+                "anim_lock" : true
             },
             "off" : {
                 "display": "idle",
                 "publish": {
-                    "topic" : "ui_event",
-                    "message" : "mute_off"
-                }
+                    "topic" : "ui/mute_off",
+                    "message" : "{\"on\":\"%DATE\"}"
+                },
+                "anim_lock" : false
             }
         }
     },
 
     "internal" : {
         "connecting": {
-            "display" : "com",
-            "publish": {
-                "topic" : "ui_event",
-                "message" : "connecting"
-            }
+            "display" : "com"
         },
         "connected": {
-            "display" : "idle",
-            "publish": {
-                "topic" : "ui_event",
-                "message" : "connected"
-            }
+            "display" : "idle"
         }
     }
 }
