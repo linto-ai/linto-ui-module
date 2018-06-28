@@ -61,10 +61,8 @@ class Animation(pg.sprite.OrderedUpdates):
     
 class Linto_UI:
     def __init__(self, manifest_path: str, args):
-        self.screen_width = 480
-        self.screen_height = 480
-        self.screen_size = [self.screen_width, self.screen_height]
-        self.screen = self.init_gui(self.screen_size)
+        self.screen_size = args.resolution
+        self.screen = self.init_gui(self.screen_size, args.fullscreen)
         self.center_pos = [v//2 for v in self.screen_size]
         self.frame_counter = 0
         self.anim_end = None
@@ -83,12 +81,12 @@ class Linto_UI:
         self.load_button()
         
 
-    def init_gui(self,resolution):
+    def init_gui(self,resolution, fullscreen: bool):
         pg.display.init()
         #pg.font.init()
         pg.mixer.quit()
         print("using resolution: ",resolution)
-        return pg.display.set_mode(resolution,pg.NOFRAME)
+        return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
 
     def init_background_sprites(self):
         background = pg.Surface(self.screen_size)
@@ -267,6 +265,7 @@ def main(args):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format="%(levelname)8s %(asctime)s %(message)s ")
     parser = argparse.ArgumentParser(description='GUI interface to record audio samples for wake word corpus building')
-    parser.add_argument('-r', dest='resolution', type=int, nargs=2, help="Screen resolution")
+    parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[480,480], help="Screen resolution")
+    parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
     args = parser.parse_args()
     main(args)
