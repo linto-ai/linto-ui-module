@@ -16,17 +16,15 @@ from pgelement import *
 
 
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
-draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
 FPS = 30
-class Animation:
+class Animation(pg.sprite.OrderedUpdates):
     def __init__(self, screen, manifest_path, render_group, end_loop_callback: callable):
+        pg.sprite.OrderedUpdates.__init__(self)
         self.screen = screen
         self.render_group = render_group
         self.end_loop_callback = end_loop_callback
-        self.sprites = []
         self.duration = None
         self.load_manifest(manifest_path)
-        
         
     def load_manifest(self, manifest_path):
         try:
@@ -46,7 +44,7 @@ class Animation:
         self.isState = True if json_manifest['type'] == 'state' else False
         # Check or create sprites for each placeholder
         
-        for sprite_ph in draw_order:
+        for sprite_ph in json_manifest['sprites'].keys():
             sprite_info = json_manifest['sprites'][sprite_ph]
             sprite_type = sprites_dict[sprite_info['mode']]
             if sprite_type is None:
@@ -59,14 +57,7 @@ class Animation:
             else:
                 sprite = sprite_type(sprite_name)
             sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
-            self.sprites.append(sprite)
-
-    def play(self, callback=None):
-        if len(self.render_group) > 0:
-            self.render_group.empty()
-        for sprite in [sprite for sprite in self.sprites if isinstance(sprite, Animated_Sprite)]:
-            sprite.frame_counter = 0
-        self.render_group.add(self.sprites)
+            self.add(sprite)
     
 class Linto_UI:
     def __init__(self, manifest_path: str, args):
@@ -143,11 +134,11 @@ class Linto_UI:
         elif animation.duration != None:
             self.anim_end = animation.duration
             
-        self.animations[anim_name].play()
+        self.render_sprites = self.animations[anim_name]
 
     def back_to_state(self):
         # Is called when a one-time animation end to go back to suspended state
-        self.current_state.play()
+        self.render_sprites = self.current_state
 
     def run(self):
         clock = pg.time.Clock()
