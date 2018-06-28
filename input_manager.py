@@ -14,7 +14,7 @@ import tenacity
 import json
 from pgelement import *
 
-
+draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 FPS = 30
 class Animation(pg.sprite.OrderedUpdates):
@@ -44,7 +44,9 @@ class Animation(pg.sprite.OrderedUpdates):
         self.isState = True if json_manifest['type'] == 'state' else False
         # Check or create sprites for each placeholder
         
-        for sprite_ph in json_manifest['sprites'].keys():
+        for sprite_ph in draw_order:
+            if sprite_ph not in json_manifest['sprites'].keys():
+                continue
             sprite_info = json_manifest['sprites'][sprite_ph]
             sprite_type = sprites_dict[sprite_info['mode']]
             if sprite_type is None:

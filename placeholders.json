@@ -8,5 +8,7 @@
         "token_left" : [],
         "center" : [0.5,0.5,0.4,0.2],
         "ring" : [0,0,1,1]
-    }
+    },
+    "draw_order" : ["ring", "body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
+
 }
