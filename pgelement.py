@@ -79,24 +79,29 @@ class Animated_Sprite(Sprite):
         self.curr_frame = 0
         self.frame_counter = 0
         self._read_manifest()
+        print("=========", self.rect)
         
     def _read_manifest(self):
         manifest_name = "sprites/" + self.img_name + '.json'
         with open(manifest_name, 'r') as f:
             self.manifest = json.load(f)
         self.frames = []
-        self.nb_frames = int(self.manifest['info']['nb_frames'])
-        self.frame_duration = int(self.manifest['info']['frame_duration'])
-        frame_width = int(self.manifest['info']['frame_width'])
+        self.nb_frames = self.manifest['nb_frames']
+        self.frame_duration = self.manifest['frame_duration']
+        frame_width = self.manifest['frame_width']
         for i in range(self.nb_frames):
             frame = self.image.subsurface((i*frame_width, 0, frame_width, self.rect.h))
             self.frames.append(frame)
-        self.image = self.frames[self.curr_frame]
-        self.rect = self.image.get_rect()
+            self.rect = frame.get_rect()
+        
         
     def set_rect(self,screen, rect, center=False):
         screen_size = screen.get_rect().size
+        print("screen size")
         new_rect = [v * rect[i] for i,v in enumerate(screen_size+screen_size)]
+        print("NEW RECT", new_rect)
+        self.rect = pg.Rect(new_rect)
+        new_frames = []
         for f in self.frames:
             f = pg.transform.scale(f, [int(v) for v in new_rect[2:]])
             self.set_pos(new_rect[:2], center=center)
@@ -107,6 +112,9 @@ class Animated_Sprite(Sprite):
                 offset_y += f.get_rect().h/2
             self.rect.x = new_rect[0] - offset_x
             self.rect.y = new_rect[1] - offset_y
+            new_frames.append(f)
+        self.frames = new_frames
+        self.image = self.frames[0]
 
     def update(self):
         self.frame_counter+=1
@@ -130,10 +138,10 @@ class Button(Sprite):
         manifest_name = "sprites/" + self.img_name + '.json'
         with open(manifest_name, 'r') as f:
             self.manifest = json.load(f)
-        self.id = self.manifest['info']['name']
-        self.frame_width = self.manifest['info']['frame_width']
-        self.nb_frames = self.manifest['info']['nb_frames']
-        self.type = self.manifest['info']['type']
+        self.id = self.manifest['name']
+        self.frame_width = self.manifest['frame_width']
+        self.nb_frames = self.manifest['nb_frames']
+        self.type = self.manifest['type']
         self.frames = []
         for i in range(self.nb_frames):
             frame = self.image.subsurface((i*self.frame_width, 0, self.frame_width, self.rect.h))

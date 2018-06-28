@@ -1,8 +1,6 @@
 {
-    "info":{
         "name" : "mouths",
-        "nb_frames" : "12", 
-        "frame_width" : "234", 
-        "frame_duration" : "5"
-    }
+        "nb_frames" : 12, 
+        "frame_width" : 234, 
+        "frame_duration" : 5
 }

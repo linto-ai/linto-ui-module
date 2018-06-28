@@ -1,34 +1,32 @@
 {
-    "animation":{
-        "id": "happy",
-        "type" : "timed",
-        "duration" : 2,
-        "sprites" : {
-            "body" : {
-                "mode" : "bouncing",
-                "sprite_name" : "linto"
-            },
-            "eyes" : {
-                "mode" : "bouncing",
-                "sprite_name" : "eyes_happy"
-            },
-            "mouth" : {
-                "mode" : "bouncing",
-                "sprite_name" : "mouth_smile2"
-            },
-            "token_right" : {
-                "mode" : "none"
-            },
-            "token_center" : {
-                "mode" : "none"
-            },
-            "token_left" : {
-                "mode" : "none"
-            },
-            "center" : {
-                "mode" : "none"
-            }
+    "id": "happy",
+    "type" : "timed",
+    "duration" : 2,
+    "sprites" : {
+        "body" : {
+            "mode" : "bouncing",
+            "sprite_name" : "linto"
+        },
+        "eyes" : {
+            "mode" : "bouncing",
+            "sprite_name" : "eyes_happy"
+        },
+        "mouth" : {
+            "mode" : "bouncing",
+            "sprite_name" : "mouth_smile2"
+        },
+        "token_right" : {
+            "mode" : "none"
+        },
+        "token_center" : {
+            "mode" : "none"
+        },
+        "token_left" : {
+            "mode" : "none"
+        },
+        "center" : {
+            "mode" : "none"
         }
-
     }
+
 }

@@ -1,33 +1,31 @@
 {
-    "animation":{
-        "id": "speaking",
-        "type" : "one-time",
-        "duration" : 3,
-        "sprites" : {
-            "body" : {
-                "mode" : "none"
-            },
-            "eyes" : {
-                "mode" : "none"
-            },
-            "mouth" : {
-                "mode" : "none"
-            },
-            "token_right" : {
-                "mode" : "none"
-            },
-            "token_center" : {
-                "mode" : "none"
-            },
-            "token_left" : {
-                "mode" : "none"
-            },
-            "center" : {
-                "mode" : "animated",
-                "sprite_name" : "loading"
+    "id": "speaking",
+    "type" : "one-time",
+    "duration" : 3,
+    "sprites" : {
+        "body" : {
+            "mode" : "none"
+        },
+        "eyes" : {
+            "mode" : "none"
+        },
+        "mouth" : {
+            "mode" : "none"
+        },
+        "token_right" : {
+            "mode" : "none"
+        },
+        "token_center" : {
+            "mode" : "none"
+        },
+        "token_left" : {
+            "mode" : "none"
+        },
+        "center" : {
+            "mode" : "animated",
+            "sprite_name" : "loading"
 
-            }
         }
-
     }
+
 }

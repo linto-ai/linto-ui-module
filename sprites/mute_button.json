@@ -1,8 +1,6 @@
 {
-    "info":{
         "name" : "mute_button",
         "type" : "on-off",
         "nb_frames" : 2,
         "frame_width" : 420
-    }
 }

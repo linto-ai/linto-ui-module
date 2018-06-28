@@ -1,8 +1,7 @@
 {
-    "info":{
-        "name" : "eyes_idle",
-        "nb_frames" : "8", 
-        "frame_width" : "450", 
-        "frame_duration" : "30"
-    }
+    "name" : "eyes_idle",
+    "nb_frames" : 8, 
+    "frame_width" : 450, 
+    "frame_duration" : 30
+
 }

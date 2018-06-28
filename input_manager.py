@@ -17,11 +17,10 @@ from pgelement import *
 
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
-FPS = 15
+FPS = 30
 class Animation:
-    def __init__(self, screen, manifest_path, all_sprites, render_group, end_loop_callback: callable):
+    def __init__(self, screen, manifest_path, render_group, end_loop_callback: callable):
         self.screen = screen
-        self.all_sprites = all_sprites
         self.render_group = render_group
         self.end_loop_callback = end_loop_callback
         self.sprites = []
@@ -34,48 +33,40 @@ class Animation:
             json_manifest = json.load(open(manifest_path, 'r'))
             placeholder_man = json.load(open("placeholders.json", 'r'))
             placeholder_man = placeholder_man['placeholders']
-            self.id = json_manifest['animation']['id']
+            self.id = json_manifest['id']
             logging.debug("Loading %s animation" % self.id) 
             #Load animation info
-            self.type = json_manifest['animation']['type']
+            self.type = json_manifest['type']
             if self.type in ['timed']:
-                self.duration = json_manifest['animation']['duration'] * FPS
+                self.duration = json_manifest['duration'] * FPS
         except FileNotFoundError:
             logging.warning("Could not load animation manifest file %s" % manifest_path)
             return
 
-        self.isState = True if json_manifest['animation']['type'] == 'state' else False
+        self.isState = True if json_manifest['type'] == 'state' else False
         # Check or create sprites for each placeholder
         
         for sprite_ph in draw_order:
-            sprite_info = json_manifest['animation']['sprites'][sprite_ph]
+            sprite_info = json_manifest['sprites'][sprite_ph]
             sprite_type = sprites_dict[sprite_info['mode']]
             if sprite_type is None:
                 continue
             sprite_name = sprite_info['sprite_name']
-            # check if exist
             logging.debug("Adding sprite %s" % sprite_name)
-            try:
-                sprite = next(s for s in self.all_sprites if isinstance(s, sprite_type) and s.img_name == sprite_name)
-            except:
-                # If not create it
-                if self.type in ['one-time']:
-                    sprite = sprite_type(sprite_name, callback=self.end_loop_callback)
-                else:
-                    sprite = sprite_type(sprite_name)
-                sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
-                self.all_sprites.add(sprite)
-            finally:
-                self.sprites.append(sprite)
+            
+            if self.type in ['one-time']:
+                sprite = sprite_type(sprite_name, callback=self.end_loop_callback)
+            else:
+                sprite = sprite_type(sprite_name)
+            sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
+            self.sprites.append(sprite)
 
     def play(self, callback=None):
         if len(self.render_group) > 0:
             self.render_group.empty()
-        print('has sprite', [sprite.img_name for sprite in self.sprites])
         for sprite in [sprite for sprite in self.sprites if isinstance(sprite, Animated_Sprite)]:
             sprite.frame_counter = 0
         self.render_group.add(self.sprites)
-        print('has sprite', [sprite.img_name for sprite in self.render_group.sprites()])
     
 class Linto_UI:
     def __init__(self, manifest_path: str, args):
@@ -88,7 +79,6 @@ class Linto_UI:
         self.anim_end = None
         self.silenced = False
 
-        self.all_sprites = pg.sprite.Group()
         self.render_sprites = pg.sprite.OrderedUpdates()
         self.buttons_all = pg.sprite.Group()
         self.buttons_visible = pg.sprite.Group()
@@ -127,7 +117,7 @@ class Linto_UI:
             manifest = json.load(f)
         #loading states
         for state in manifest.keys():
-            anim = Animation(self.screen, os.path.join(dir, state + '.json'), self.all_sprites, self.render_sprites, self.back_to_state)
+            anim = Animation(self.screen, os.path.join(dir, state + '.json'), self.render_sprites, self.back_to_state)
             self.animations[state] = anim
 
     def load_button(self):
@@ -171,7 +161,8 @@ class Linto_UI:
             self.background_sprites.update()
             self.background_sprites.draw(self.screen)
             self.render_sprites.update()
-            self.render_sprites.draw(self.screen)
+            if len(self.render_sprites) > 0:
+                self.render_sprites.draw(self.screen)
             self.buttons_visible.update()
             self.buttons_visible.draw(self.screen)
             pg.display.flip()
@@ -268,7 +259,8 @@ class Event_Manager(Thread):
 
     def play_sound(self, name):
         logging.debug("playing sound")
-        subprocess.call(['aplay', os.path.dirname(os.path.abspath(__file__)) + '/sounds/'+ name +'.wav'])
+        file_path = os.path.dirname(os.path.abspath(__file__)) + '/sounds/'+ name +'.wav'
+        subprocess.call(['aplay', file_path])
 
     def run(self):
         while self.alive:
