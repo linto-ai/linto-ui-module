@@ -15,6 +15,7 @@ import tenacity
 import json
 from pgelement import *
 
+FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 FPS = 30
@@ -29,8 +30,9 @@ class Animation(pg.sprite.OrderedUpdates):
         
     def load_manifest(self, manifest_path):
         try:
+            print(manifest_path)
             json_manifest = json.load(open(manifest_path, 'r'))
-            placeholder_man = json.load(open("placeholders.json", 'r'))
+            placeholder_man = json.load(open(FILE_PATH + "placeholders.json", 'r'))
             placeholder_man = placeholder_man['placeholders']
             self.id = json_manifest['id']
             logging.debug("Loading %s animation" % self.id) 
@@ -56,9 +58,9 @@ class Animation(pg.sprite.OrderedUpdates):
             logging.debug("Adding sprite %s" % sprite_name)
             
             if self.type in ['one-time']:
-                sprite = sprite_type(sprite_name, callback=self.end_loop_callback)
+                sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name, callback=self.end_loop_callback)
             else:
-                sprite = sprite_type(sprite_name)
+                sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name)
             sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
             self.add(sprite)
     
@@ -86,7 +88,7 @@ class Linto_UI:
 
     def init_gui(self,resolution, fullscreen: bool):
         pg.display.init()
-        #pg.mouse.set_visible(False)
+        pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
         print("using resolution: ",resolution)
         return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
 
@@ -97,28 +99,28 @@ class Linto_UI:
         self.background = pg.sprite.Sprite()
         self.background.image = background
         self.background.rect = background.get_rect()
-        self.ring = Rotating_Ring('ring', self.screen_size)
+        self.ring = Rotating_Ring(FILE_PATH + 'sprites/ring', self.screen_size)
 
         self.background_sprites.add(self.background)
 
     def load_animations(self, dir):
         self.animations = dict()
         logging.debug("Loading animations")
-        with open('animations_manifest.json', 'r') as f:
+        with open(FILE_PATH +'animations_manifest.json', 'r') as f:
             manifest = json.load(f)
         #loading states
         for state in manifest.keys():
-            anim = Animation(self.screen, os.path.join(dir, state + '.json'), self.render_sprites, self.back_to_state)
+            anim = Animation(self.screen, FILE_PATH + os.path.join(dir, state + '.json'), self.render_sprites, self.back_to_state)
             self.animations[state] = anim
 
     def load_button(self):
         logging.debug("Loading Buttons")
-        with open('buttons_manifest.json', 'r') as f:
+        with open(FILE_PATH + 'buttons_manifest.json', 'r') as f:
             manifest = json.load(f)
         self.buttons_placeholder = manifest['placeholder']
         self.buttons = {}
         for button in manifest['button'].keys():
-            self.buttons[button] = Button(button, self.event_manager)
+            self.buttons[button] = Button(FILE_PATH + '/sprites/' +  button, self.event_manager)
             self.buttons[button].set_rect(self.screen, self.buttons_placeholder[manifest['button'][button]['placeholder']])
             self.buttons[button].visible = manifest['button'][button]['visible']
             if self.buttons[button].visible :
@@ -180,7 +182,7 @@ class Event_Manager(Thread):
         self.anim_lock = False
 
     def load_manifest(self):
-        with open("event_binding.json", 'r') as f:
+        with open(FILE_PATH + "event_binding.json", 'r') as f:
             self.event_binding = json.load(f)
 
     @tenacity.retry(wait=tenacity.wait_fixed(5),

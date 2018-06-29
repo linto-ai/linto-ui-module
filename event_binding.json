@@ -29,8 +29,13 @@
         "ui/connected": {
 
         },
-        "ui_/disconnected" : {
+        "ui/disconnected" : {
 
+        },
+        "lintoclient/request/send" : {
+            "any": {
+                "display": "com"
+            }
         }
     },
 

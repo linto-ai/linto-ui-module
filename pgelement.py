@@ -8,7 +8,7 @@ class Sprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         self.callback = callback
         self.img_name = img_name
-        self.original_image = pg.image.load("sprites/%s.png" % img_name)
+        self.original_image = pg.image.load("%s.png" % img_name)
         self.image = self.original_image
         self.rect = self.image.get_rect()
         self.angle = 0
@@ -81,7 +81,7 @@ class Animated_Sprite(Sprite):
         self._read_manifest()
         
     def _read_manifest(self):
-        manifest_name = "sprites/" + self.img_name + '.json'
+        manifest_name = self.img_name + '.json'
         with open(manifest_name, 'r') as f:
             self.manifest = json.load(f)
         self.frames = []
@@ -132,7 +132,7 @@ class Button(Sprite):
         self._read_manifest()
 
     def _read_manifest(self):
-        manifest_name = "sprites/" + self.img_name + '.json'
+        manifest_name = self.img_name + '.json'
         with open(manifest_name, 'r') as f:
             self.manifest = json.load(f)
         self.id = self.manifest['name']
