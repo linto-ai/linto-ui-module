@@ -4,6 +4,7 @@ import os, sys
 import datetime
 from threading import Thread
 import subprocess
+import alsaaudio
 from enum import Enum
 import logging
 import time
@@ -99,9 +100,21 @@ class Linto_UI:
         self.background = pg.sprite.Sprite()
         self.background.image = background
         self.background.rect = background.get_rect()
-        self.ring = Rotating_Ring(FILE_PATH + 'sprites/ring', self.screen_size)
-
+        self.rings = {}
+        placeholder_man = json.load(open(FILE_PATH + "placeholders.json", 'r'))
+        placeholder_man = placeholder_man['placeholders']
+        for color in ['ring_red', 'ring_blue', 'ring_green']:
+            self.rings[color] = Static_Sprite(FILE_PATH + 'sprites/' + color)
+            self.rings[color].set_rect(self.screen, placeholder_man['ring'])
+        self.set_ring('ring_blue')
         self.background_sprites.add(self.background)
+    
+    def set_ring(self, ring_color):
+        if ring_color in self.rings.keys():
+            self.background.image.blit(self.rings[ring_color].image, [0,0])
+        else:
+            logging.warning('UI: Tried to set unknown ring color %s' % ring_color)
+
 
     def load_animations(self, dir):
         self.animations = dict()
@@ -120,7 +133,7 @@ class Linto_UI:
         self.buttons_placeholder = manifest['placeholder']
         self.buttons = {}
         for button in manifest['button'].keys():
-            self.buttons[button] = Button(FILE_PATH + '/sprites/' +  button, self.event_manager)
+            self.buttons[button] = Button(FILE_PATH + '/sprites/' + button, self.event_manager)
             self.buttons[button].set_rect(self.screen, self.buttons_placeholder[manifest['button'][button]['placeholder']])
             self.buttons[button].visible = manifest['button'][button]['visible']
             if self.buttons[button].visible :
@@ -234,7 +247,6 @@ class Event_Manager(Thread):
         actions = self.event_binding['broker_msg'][topic][msg]
         self._resolve_action(actions)
             
-
     def touch_input(self, button, value):
         logging.debug('Touch: %s -> %s' % (button, value))
         if button in self.event_binding['touch_input'].keys():
@@ -261,6 +273,14 @@ class Event_Manager(Thread):
                 self.play_sound(actions["sound"])
             elif action == 'anim_lock':
                 self.anim_lock = actions["anim_lock"]
+            elif action == 'ring':
+                self.ui.set_ring(actions['ring'])
+            elif action == 'volume':
+                self.change_volume(actions['volume'])
+    
+    def change_volume(self, value):
+        mixer = alsaaudio.Mixer()
+        mixer.setvolume(value)
 
     def play_sound(self, name):
         logging.debug("playing sound")

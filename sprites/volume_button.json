@@ -1,0 +1,7 @@
+{
+        "name" : "volume_button",
+        "type" : "value",
+        "nb_frames" : 4,
+        "frame_width" : 420, 
+        "state_values" : ["full", "mid", "low", "silenced"]
+}

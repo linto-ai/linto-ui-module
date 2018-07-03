@@ -139,24 +139,43 @@ class Button(Sprite):
         self.frame_width = self.manifest['frame_width']
         self.nb_frames = self.manifest['nb_frames']
         self.type = self.manifest['type']
+        if self.type == 'single':
+            return
+        if self.type == 'value':
+            self.values = self.manifest['state_values']
         self.frames = []
         for i in range(self.nb_frames):
             frame = self.image.subsurface((i*self.frame_width, 0, self.frame_width, self.rect.h))
             self.frames.append(frame)
         self.image = self.frames[self.state]
-        self.rect
 
     def clicked(self):
         if self.type == 'on-off':
             self.state = not self.state
             self.image = self.frames[self.state]
             self.event_manager.touch_input(self.id, "on" if self.state else "off")
+        elif self.type == 'value':
+            self.state = (self.state + 1 ) % self.nb_frames
+            self.image = self.frames[self.state]
+            self.event_manager.touch_input(self.id, self.values[self.state] )
 
     def set_rect(self, screen, rect, center=True):
         screen_size = screen.get_rect().size
         new_rect = [v * rect[i] for i,v in enumerate(screen_size+screen_size)]
         self.rect = pg.Rect(new_rect)
         new_frames = []
+        if self.type == "single":
+            self.image = pg.transform.scale(self.image, [int(v) for v in new_rect[2:]])
+            self.set_pos(new_rect[:2], center=center)
+            offset_x = 0
+            offset_y = 0
+            if center:
+                offset_x += self.image.get_rect().w/2
+                offset_y += self.image.get_rect().h/2
+            self.rect.x = new_rect[0] - offset_x
+            self.rect.y = new_rect[1] - offset_y
+            return
+
         for f in self.frames:
             f = pg.transform.scale(f, [int(v) for v in new_rect[2:]])
             self.set_pos(new_rect[:2], center=center)

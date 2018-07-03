@@ -13,7 +13,8 @@
         },
         "utterance/stop" :{
             "any":{
-                "display": "idle"
+                "display": "idle",
+                "sound": "beep2"
             }
         },
         "tts/speaking/start": {
@@ -26,10 +27,17 @@
                 "display" : "idle"
             }
         },
-        "ui/connected": {
-
+        "lintoclient/connected": {
+            "any": {
+                "ring" : "ring_green",
+                "display" : "idle"
+            }
         },
-        "ui/disconnected" : {
+        "lintoclient/disconnected" : {
+            "any": {
+                "display" : "error",
+                "ring" : "ring_red"
+            }
 
         },
         "lintoclient/request/send" : {
@@ -56,6 +64,20 @@
                     "message" : "{\"on\":\"%DATE\"}"
                 },
                 "anim_lock" : false
+            }
+        },
+        "volume_button": {
+            "full": {
+                "volume": 100
+            },
+            "mid": {
+                "volume": 50
+            },
+            "low": {
+                "volume": 25
+            },
+            "silenced": {
+                "volume": 0
             }
         }
     },

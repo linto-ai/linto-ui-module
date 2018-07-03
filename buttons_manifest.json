@@ -2,12 +2,21 @@
     "placeholder": {
         "right": [0.925,0.5,0.1,0.1],
         "left" : [0.075,0.5,0.1,0.1],
-        "top" : [0.5,0.1,0.1,0.1]
+        "middle" : [0.5,0.1,0.1,0.1], 
+        "bottom_center" : [0.5,0.925,0.1,0.1]
 
     },
     "button": {
         "mute_button": {
             "placeholder": "left",
+            "visible" : true
+        },
+        "cancel_button" : {
+            "placeholder" : "bottom_center",
+            "visible" : true
+        },
+        "volume_button" : {
+            "placeholder" : "right",
             "visible" : true
         }
     }
