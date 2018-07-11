@@ -129,6 +129,8 @@ class Button(Sprite):
         self.event_manager = event_manager
         self.id = img_name
         self.state = 0
+        self.frame_counter = 0
+        
         self._read_manifest()
 
     def _read_manifest(self):
@@ -143,6 +145,8 @@ class Button(Sprite):
             return
         if self.type == 'value':
             self.values = self.manifest['state_values']
+        if self.type == 'animated':
+            self.frame_duration = self.manifest['frame_duration']
         self.frames = []
         for i in range(self.nb_frames):
             frame = self.image.subsurface((i*self.frame_width, 0, self.frame_width, self.rect.h))
@@ -157,7 +161,17 @@ class Button(Sprite):
         elif self.type == 'value':
             self.state = (self.state + 1 ) % self.nb_frames
             self.image = self.frames[self.state]
-            self.event_manager.touch_input(self.id, self.values[self.state] )
+            self.event_manager.touch_input(self.id, self.values[self.state])
+        elif self.type in ['single', 'animated']:
+            self.event_manager.touch_input(self.id, 'clicked')
+
+    def update(self):
+        if self.type == 'animated':
+            self.frame_counter += 1
+            if self.frame_counter == self.frame_duration:
+                self.frame_counter = 0
+                self.state = (self.state + 1) % self.nb_frames
+                self.image = self.frames[self.state]
 
     def set_rect(self, screen, rect, center=True):
         screen_size = screen.get_rect().size

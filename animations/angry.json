@@ -1,22 +1,22 @@
 {
-    "id": "error",
-    "type" : "state",
+    "id": "angry",
+    "type" : "timed",
+    "duration" : 3,
     "sprites" : {
         "body" : {
             "mode" : "static",
-            "sprite_name" : "linto"
+            "sprite_name" : "linto_red"
         },
         "eyes" : {
             "mode" : "bouncing",
-            "sprite_name" : "eyes_think"
+            "sprite_name" : "eyes_angry"
         },
         "mouth" : {
             "mode" : "bouncing",
-            "sprite_name" : "mouth_round"
+            "sprite_name" : "mouth_angry"
         },
         "token_right" : {
-            "mode" : "animated",
-            "sprite_name" : "gears"
+            "mode" : "none"
         },
         "token_center" : {
             "mode" : "none"
@@ -28,4 +28,5 @@
             "mode" : "none"
         }
     }
+
 }

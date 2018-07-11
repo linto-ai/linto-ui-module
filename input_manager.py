@@ -10,6 +10,7 @@ import logging
 import time
 
 import argparse
+import configparser
 import pygame as pg
 import paho.mqtt.client as mqtt
 import tenacity
@@ -17,7 +18,7 @@ import json
 from pgelement import *
 
 FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
-draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center"]
+draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center", "shutter"]
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 FPS = 30
 class Animation(pg.sprite.OrderedUpdates):
@@ -45,9 +46,8 @@ class Animation(pg.sprite.OrderedUpdates):
             logging.warning("Could not load animation manifest file %s" % manifest_path)
             return
 
-        self.isState = True if json_manifest['type'] == 'state' else False
+        self.isState = json_manifest['type'] == 'state' 
         # Check or create sprites for each placeholder
-        
         for sprite_ph in draw_order:
             if sprite_ph not in json_manifest['sprites'].keys():
                 continue
@@ -66,14 +66,15 @@ class Animation(pg.sprite.OrderedUpdates):
             self.add(sprite)
     
 class Linto_UI:
-    def __init__(self, manifest_path: str, args):
+    def __init__(self, args, config):
+        self.config = config
         self.screen_size = args.resolution
         self.screen = self.init_gui(self.screen_size, args.fullscreen)
         self.center_pos = [v//2 for v in self.screen_size]
         self.frame_counter = 0
         self.anim_end = None
         self.silenced = False
-
+        
         self.render_sprites = pg.sprite.OrderedUpdates()
         self.buttons_all = pg.sprite.Group()
         self.buttons_visible = pg.sprite.Group()
@@ -82,15 +83,15 @@ class Linto_UI:
         self.load_animations('animations')
         self.current_state = self.animations['loading']
         self.play_anim('loading')
-        self.event_manager = Event_Manager(self)
+        self.event_manager = Event_Manager(self, config)
         self.event_manager.start()
         self.load_button()
         
 
     def init_gui(self,resolution, fullscreen: bool):
         pg.display.init()
-        pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
-        print("using resolution: ",resolution)
+        if not self.config['debug'] == 'true':
+            pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0)) # set the cursor invisible
         return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
 
     def init_background_sprites(self):
@@ -115,15 +116,14 @@ class Linto_UI:
         else:
             logging.warning('UI: Tried to set unknown ring color %s' % ring_color)
 
-
-    def load_animations(self, dir):
+    def load_animations(self, folder):
         self.animations = dict()
         logging.debug("Loading animations")
         with open(FILE_PATH +'animations_manifest.json', 'r') as f:
             manifest = json.load(f)
         #loading states
         for state in manifest.keys():
-            anim = Animation(self.screen, FILE_PATH + os.path.join(dir, state + '.json'), self.render_sprites, self.back_to_state)
+            anim = Animation(self.screen, os.path.join(FILE_PATH + folder, state + '.json'), self.render_sprites, self.back_to_state)
             self.animations[state] = anim
 
     def load_button(self):
@@ -133,12 +133,20 @@ class Linto_UI:
         self.buttons_placeholder = manifest['placeholder']
         self.buttons = {}
         for button in manifest['button'].keys():
-            self.buttons[button] = Button(FILE_PATH + '/sprites/' + button, self.event_manager)
+            self.buttons[button] = Button(FILE_PATH + 'sprites/' + button, self.event_manager)
             self.buttons[button].set_rect(self.screen, self.buttons_placeholder[manifest['button'][button]['placeholder']])
             self.buttons[button].visible = manifest['button'][button]['visible']
             if self.buttons[button].visible :
                 self.buttons_visible.add(self.buttons[button])
             self.buttons_all.add(self.buttons[button])
+
+    def button_visibility(self, button_name, visible):
+        if visible:
+            if not self.buttons_visible.has(self.buttons[button_name]):
+                self.buttons_visible.add(self.buttons[button_name])
+        else:
+            if self.buttons_visible.has(self.buttons[button_name]):
+                self.buttons_visible.remove(self.buttons[button_name])
 
     def play_anim(self, anim_name):
         animation = self.animations[anim_name]
@@ -148,7 +156,6 @@ class Linto_UI:
             self.anim_end = None
         elif animation.duration != None:
             self.anim_end = animation.duration
-            
         self.render_sprites = self.animations[anim_name]
 
     def back_to_state(self):
@@ -181,18 +188,28 @@ class Linto_UI:
                     collided = pg.sprite.spritecollide(mouse_sprite, self.buttons_visible, False)
                     for sprite in collided:
                         sprite.clicked()
+                    if self.current_state == self.animations['sleeping']:
+                        self.event_manager._resolve_action(self.event_manager.event_binding['broker_msg']["utterance/stop"]['any'])
                 if event.type in [pg.KEYUP] and event.key == pg.K_ESCAPE:
                     self.event_manager.end()
                     exit()
             clock.tick(FPS)
 
 class Event_Manager(Thread):
-    def __init__(self, ui: Linto_UI):
+    def __init__(self, ui: Linto_UI, config):
         Thread.__init__(self)
+        self.config = config
         self.ui = ui
         self.load_manifest()
         self.alive = True
         self.anim_lock = False
+        self.connected = True
+        self.muted = False
+        self.counter = 0
+
+        #Audio init
+        mixer = alsaaudio.Mixer()
+        mixer.setvolume(100)
 
     def load_manifest(self):
         with open(FILE_PATH + "event_binding.json", 'r') as f:
@@ -204,11 +221,11 @@ class Event_Manager(Thread):
             retry_error_callback=(lambda s: s.result())
             )
     def broker_connect(self):
-        logging.info("Attempting connexion to broker at %s:%i" % ("localhost", 8889))
+        logging.info("Attempting connexion to broker at %s:%i" % (config['broker_ip'], int(config['broker_port'])))
         try:
             broker = mqtt.Client()
             broker.on_connect = self._on_broker_connect
-            broker.connect("localhost", 1883, 0)
+            broker.connect(config['broker_ip'], int(config['broker_port']), 0)
             broker.on_disconnect = self._on_broker_disconnect
             broker.on_message = self._on_broker_msg
             return broker
@@ -222,7 +239,7 @@ class Event_Manager(Thread):
         self.broker.disconnect()
         
     def _on_broker_connect(self, client, userdata, flags, rc):
-        logging.debug("Connected to broker")
+        logging.info("Connected to broker")
         for topic in self.event_binding['broker_msg'].keys():
                 self.broker.subscribe(topic)
         self.ui.play_anim('idle')
@@ -246,6 +263,7 @@ class Event_Manager(Thread):
                 return  
         actions = self.event_binding['broker_msg'][topic][msg]
         self._resolve_action(actions)
+        self.counter = 0
             
     def touch_input(self, button, value):
         logging.debug('Touch: %s -> %s' % (button, value))
@@ -253,6 +271,15 @@ class Event_Manager(Thread):
             if value in self.event_binding['touch_input'][button].keys():
                 actions = self.event_binding['touch_input'][button][value]
                 self._resolve_action(actions)
+            
+            # Easter (for Damien)
+            if self.config['easter'] == 'true' and button == 'empty_button':
+                self.counter += 1
+                if self.counter >= 10:
+                    t = Thread(target=self.play_sound, args=['angry'])
+                    t.start()
+                    self.ui.play_anim('angry')
+                    self.counter = 0
 
     def publish(self, topic, msg):
         # Format message looking for tokens
@@ -261,10 +288,16 @@ class Event_Manager(Thread):
         self.broker.publish(topic, payload)
 
     def _resolve_action(self, actions):
+        if 'ring' in actions.keys():
+                self.ui.set_ring(actions['ring'])
+        if 'connexion' in actions.keys():
+                self.connected = actions['connexion']
+        elif not self.connected:
+            return
         if self.anim_lock and "anim_lock" not in actions:
             return
         for action in actions.keys():
-            if action == 'display':                        
+            if action == 'display':                 
                 self.ui.play_anim(actions["display"])
             elif action == 'publish' and self.broker is not None:
                 self.publish(actions["publish"]['topic'],
@@ -273,10 +306,13 @@ class Event_Manager(Thread):
                 self.play_sound(actions["sound"])
             elif action == 'anim_lock':
                 self.anim_lock = actions["anim_lock"]
-            elif action == 'ring':
-                self.ui.set_ring(actions['ring'])
             elif action == 'volume':
                 self.change_volume(actions['volume'])
+            elif action == 'buttons':
+                for button_name in actions['buttons'].keys():
+                    self.ui.button_visibility(button_name, actions['buttons'][button_name])
+            elif action =='connexion':
+                self.connected = actions['connexion']
     
     def change_volume(self, value):
         mixer = alsaaudio.Mixer()
@@ -294,14 +330,17 @@ class Event_Manager(Thread):
             self.ui.play_anim('idle')
             self.broker.loop_forever(retry_first_connection=True)
 
-def main(args):
-    ui = Linto_UI("", args)
+def main(args, config):
+    ui = Linto_UI(args, config)
     ui.run()
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, format="%(levelname)8s %(asctime)s %(message)s ")
+    config = configparser.ConfigParser()
+    config.read(FILE_PATH + "config.conf")
+    config = config['CONFIG']
+    logging.basicConfig(level=logging.DEBUG if config['debug'] == 'true' else logging.INFO, format="%(levelname)8s %(asctime)s %(message)s ")
     parser = argparse.ArgumentParser(description='GUI interface to record audio samples for wake word corpus building')
     parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[480,480], help="Screen resolution")
     parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
     args = parser.parse_args()
-    main(args)
+    main(args, config)

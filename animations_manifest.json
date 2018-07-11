@@ -5,6 +5,8 @@
     "speaking" : "speaking",
     "com" : "com",
     "loading" : "loading",
-    "happy" : "happy", 
-    "error" : "error"
+    "happy" : "happy",
+    "error" : "error",
+    "angry" : "angry",
+    "meeting" : "meeting"
 }

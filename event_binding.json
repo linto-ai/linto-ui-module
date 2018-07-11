@@ -8,13 +8,19 @@
         "utterance/start": {
             "any":{
                 "display" : "listening",
-                "sound" : "beep1"
+                "sound" : "beep1",
+                "buttons": {
+                    "cancel_button" : true
+                }
             }
         },
         "utterance/stop" :{
             "any":{
                 "display": "idle",
-                "sound": "beep2"
+                "sound": "beep2",
+                "buttons": {
+                    "cancel_button" : false
+                }
             }
         },
         "tts/speaking/start": {
@@ -30,19 +36,39 @@
         "lintoclient/connected": {
             "any": {
                 "ring" : "ring_green",
-                "display" : "idle"
+                "connexion" : true,
+                "display" : "idle",
+                "buttons" : {
+                    "mute_button" : true,
+                    "volume_button" : true
+                }
             }
         },
         "lintoclient/disconnected" : {
             "any": {
                 "display" : "error",
-                "ring" : "ring_red"
+                "ring" : "ring_red",
+                "connexion": false,
+                "buttons" : {
+                    "mute_button" : false,
+                    "volume_button" : false
+                }
             }
 
         },
         "lintoclient/request/send" : {
             "any": {
                 "display": "com"
+            }
+        },
+        "lintoclient/mode/meeting" : {
+            "any": {
+                "display" : "meeting",
+                "buttons" : {
+                    "mute_button" : false,
+                    "volume_button" : false,
+                    "recording_button" : true
+                }
             }
         }
     },
@@ -55,7 +81,10 @@
                     "topic" : "ui/mute_on",
                     "message" : "{\"on\":\"%DATE\"}"
                 },
-                "anim_lock" : true
+                "anim_lock" : true,
+                "buttons" : {
+                    "cancel_button" : false
+                }
             },
             "off" : {
                 "display": "idle",
@@ -78,6 +107,24 @@
             },
             "silenced": {
                 "volume": 0
+            }
+        },
+        "cancel_button": {
+            "clicked" : {
+                "display": "idle",
+                "buttons" : {
+                    "cancel_button" : false
+                },
+                "publish" : {
+                    "topic" : "ui/cancel",
+                    "message" : "{\"on\":\"%DATE\"}"
+
+                }                
+            }
+        }, 
+        "empty_button": {
+            "clicked": {
+                "display": "happy"
             }
         }
     },

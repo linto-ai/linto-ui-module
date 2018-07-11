@@ -1,22 +1,21 @@
 {
-    "id": "error",
+    "id": "idle",
     "type" : "state",
     "sprites" : {
         "body" : {
-            "mode" : "static",
+            "mode" : "bouncing",
             "sprite_name" : "linto"
         },
         "eyes" : {
             "mode" : "bouncing",
-            "sprite_name" : "eyes_think"
+            "sprite_name" : "eyes_glasses"
         },
         "mouth" : {
             "mode" : "bouncing",
-            "sprite_name" : "mouth_round"
+            "sprite_name" : "mouth_smile3"
         },
         "token_right" : {
-            "mode" : "animated",
-            "sprite_name" : "gears"
+            "mode" : "none"
         },
         "token_center" : {
             "mode" : "none"

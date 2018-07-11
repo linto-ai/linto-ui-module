@@ -1,6 +1,6 @@
 {
         "name" : "cancel_button",
         "type" : "single",
-        "nb_frames" : 2,
+        "nb_frames" : 1,
         "frame_width" : 420
 }
