@@ -1,0 +1,22 @@
+{
+    "state_name" : "recording", 
+    "animation" : "recording",
+    "buttons" : ["recording_button", "mute_button"],
+    "events" : {
+        "broker_message": {
+
+        },
+        "button_clicked": {
+            "mute_button": {
+                "on": {
+                    "state" : "paused",
+                    "publish" : {
+                    "topic" : "ui/mute_on",
+                    "message" : "{\"on\":\"%DATE\"}"
+                    }
+                }
+
+            }
+        }
+    }
+}

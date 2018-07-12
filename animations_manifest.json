@@ -8,5 +8,6 @@
     "happy" : "happy",
     "error" : "error",
     "angry" : "angry",
-    "meeting" : "meeting"
+    "recording" : "recording", 
+    "paused" : "paused"
 }

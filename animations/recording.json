@@ -1,5 +1,5 @@
 {
-    "id": "idle",
+    "id": "recording",
     "type" : "state",
     "sprites" : {
         "body" : {

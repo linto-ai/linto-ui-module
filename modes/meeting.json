@@ -1,0 +1,21 @@
+{
+    "mode_name" : "meeting", 
+    "default_state" : "recording",
+    "events" : {
+        "broker_message": {
+            "lintoclient/disconnected" : {
+                "any": {
+                    "mode" : "disconnected",
+                    "ring" : "ring_red"
+                }
+            },
+            "lintoclient/action/stop_meeting": {
+                "any" : {
+                    "mode" : "command"
+                }
+            }
+        },
+        "button_clicked": {
+        }
+    }
+}

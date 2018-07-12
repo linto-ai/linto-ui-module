@@ -1,0 +1,34 @@
+{
+    "state_name" : "speaking", 
+    "animation" : "speaking",
+    "buttons" : ["empty_button", "mute_button", "volume_button", "cancel_button"],
+    "events" : {
+        "broker_message": {
+            "tts/speaking/stop" :{
+                "any":{
+                    "state": "idle"
+                }
+            }
+        },
+        "button_clicked": {
+            "cancel_button": {
+                "clicked" : {
+                    "state": "idle",
+                    "publish" : {
+                        "topic" : "ui/cancel",
+                        "message" : "{\"on\":\"%DATE\"}"
+                    }
+                }
+            },
+            "mute_button": {
+                "on" : {
+                    "mode": "sleeping",
+                    "publish" : {
+                        "topic" : "ui/mute_on",
+                        "message" : "{\"on\":\"%DATE\"}"
+                    }
+                }
+            }
+        }
+    }
+}

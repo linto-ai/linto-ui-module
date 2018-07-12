@@ -1,0 +1,22 @@
+{
+    "state_name" : "com", 
+    "animation" : "com",
+    "buttons" : ["empty_button"],
+    "events" : {
+        "broker_message": {
+            "lintoclient/mode/meeting" :{
+                "any":{
+                    "mode": "meeting"
+                }
+            },
+            "tts/speaking/start" :{
+                "any":{
+                    "state": "speaking"
+                }
+            }
+        },
+        "button_clicked": {
+                     
+        }
+    }
+}

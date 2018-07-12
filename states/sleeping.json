@@ -1,0 +1,13 @@
+{
+    "state_name" : "sleeping", 
+    "animation" : "sleeping",
+    "buttons" : ["empty_button", "mute_button"],
+    "events" : {
+        "broker_message": {
+            
+        },
+        "button_clicked": {
+            
+        }
+    }
+}

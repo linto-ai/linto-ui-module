@@ -1,0 +1,45 @@
+{
+    "mode_name" : "command", 
+    "default_state" : "idle",
+    "events" : {
+        "broker_message": {
+            "lintoclient/disconnected" : {
+                "any": {
+                    "mode" : "disconnected",
+                    "ring" : "ring_red"
+                }
+            },
+            "lintoclient/action/start_meeting": {
+                "any" : {
+                    "mode" : "meeting"
+                }
+            }
+
+        },
+        "button_clicked": {
+            "mute_button":{
+                "on" : {
+                    "mode": "sleeping",
+                    "publish": {
+                        "topic" : "ui/mute_on",
+                        "message" : "{\"on\":\"%DATE\"}"
+                    }
+                }
+            },   
+            "volume_button": {
+                "full": {
+                    "volume": 100
+                },
+                "mid": {
+                    "volume": 50
+                },
+                "low": {
+                    "volume": 25
+                },
+                "silenced": {
+                    "volume": 0
+                }
+            }
+        }
+    }
+}

@@ -4,6 +4,7 @@
         "left" : [0.075,0.5,0.1,0.1],
         "middle" : [0.5,0.1,0.1,0.1], 
         "bottom_center" : [0.5,0.925,0.1,0.1],
+        "top_center" : [0.5,0.075,0.1,0.1],
         "center" : [0.5,0.5,0.5,0.5]
 
     },
@@ -14,7 +15,7 @@
         },
         "cancel_button" : {
             "placeholder" : "bottom_center",
-            "visible" : false
+            "visible" : true
         },
         "volume_button" : {
             "placeholder" : "right",
@@ -25,8 +26,8 @@
             "visible" : true
         }, 
         "recording_button": {
-            "placeholder" : "bottom_center",
-            "visible" : false
+            "placeholder" : "top_center",
+            "visible" : true
         }
     }
 }

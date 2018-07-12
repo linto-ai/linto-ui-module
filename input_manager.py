@@ -21,6 +21,58 @@ FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center", "shutter"]
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 FPS = 30
+
+class Mode:
+    def __init__(self, manifest: dict, manager):
+        self.id = manifest['mode_name']
+        self.manager = manager
+        self.previous_mode = None
+        #Default state
+        try:
+            self.default_state = self.manager.states[manifest['default_state']]
+            
+        except KeyError:
+            logging.warning("Could not set default_state {} for mode {}.".format(manifest['default_state'], self.id))
+            self.default_state = None
+        self.current_state = self.default_state
+        #Events
+        self.events = manifest['events']
+    
+    def set(self, previous_mode):
+        logging.debug("Changing to mode {} from mode {}".format(self.id, previous_mode.id if previous_mode is not None else 'None'))
+        self.previous_mode = previous_mode
+        if self.default_state is not None:
+            self.current_state = self.default_state
+        self.current_state.set() 
+
+class State:
+    def __init__(self, manifest: dict, manager):
+        self.id = manifest['state_name']
+        self.manager = manager
+        # Animation
+        try:
+            self.animation = self.manager.animations[manifest['animation']]
+        except KeyError:
+            logging.warning("Could not set animation {} for state {}.".format(manifest['animation'], self.id))
+        
+        #Buttons
+        self.buttons = []
+        for button_name in manifest['buttons']:
+            try:
+                self.buttons.append(self.manager.buttons[button_name])
+            except KeyError:
+                logging.warning("Could not set button {} for state {}.".format(button_name, self.id))
+        #Events
+        self.events = manifest['events']
+
+    def set(self):
+        logging.debug("Changing to state {}".format(self.id))
+        self.manager.set_buttons(self.buttons)
+        print(self.animation)
+        self.manager.play_anim(self.animation)
+
+    def __str__(self):
+        return "<State: {}>".format(self.id)
 class Animation(pg.sprite.OrderedUpdates):
     def __init__(self, screen, manifest_path, render_group, end_loop_callback: callable):
         pg.sprite.OrderedUpdates.__init__(self)
@@ -64,30 +116,49 @@ class Animation(pg.sprite.OrderedUpdates):
                 sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name)
             sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
             self.add(sprite)
+    def __str__(self):
+        return "<Animation: {} ({} sprites)>".format(self.id, self.sprites)
     
 class Linto_UI:
     def __init__(self, args, config):
         self.config = config
+
+        # Init display
         self.screen_size = args.resolution
         self.screen = self.init_gui(self.screen_size, args.fullscreen)
         self.center_pos = [v//2 for v in self.screen_size]
-        self.frame_counter = 0
-        self.anim_end = None
-        self.silenced = False
         
         self.render_sprites = pg.sprite.OrderedUpdates()
-        self.buttons_all = pg.sprite.Group()
-        self.buttons_visible = pg.sprite.Group()
-        self.background_sprites = pg.sprite.Group()
-        self.init_background_sprites()
+
+        #Animations
+        self.animations = dict()
         self.load_animations('animations')
-        self.current_state = self.animations['loading']
-        self.play_anim('loading')
+
+        #Event_Manager
         self.event_manager = Event_Manager(self, config)
         self.event_manager.start()
-        self.load_button()
-        
 
+        #Backgrounds
+        self.background_sprites = pg.sprite.Group()
+        self.init_background_sprites()
+        
+        #Buttons
+        self.buttons = pg.sprite.Group()
+        self.buttons_visible = pg.sprite.Group()
+        self.load_buttons()
+        
+        #States
+        self.states = {}
+        self.load_states('states')
+        self.current_state = None
+        
+        #Modes
+        self.modes = {}
+        self.load_modes('modes')
+        self.current_mode = None
+        
+        self.set_mode('command')
+        
     def init_gui(self,resolution, fullscreen: bool):
         pg.display.init()
         if not self.config['debug'] == 'true':
@@ -123,10 +194,26 @@ class Linto_UI:
             manifest = json.load(f)
         #loading states
         for state in manifest.keys():
-            anim = Animation(self.screen, os.path.join(FILE_PATH + folder, state + '.json'), self.render_sprites, self.back_to_state)
+            anim = Animation(self.screen, os.path.join(FILE_PATH + folder, state + '.json'), self.render_sprites, lambda s : s)
             self.animations[state] = anim
+    
+    def load_states(self, folder):
+        for file_name in os.listdir(FILE_PATH + folder):
+            file_path = os.path.join(FILE_PATH, folder, file_name)
+            if file_path.endswith('.json'):
+                with open(file_path) as f:
+                    manifest = json.load(f)
+                    self.states[manifest['state_name']] = State(manifest, self)
+    
+    def load_modes(self, folder):
+        for file_name in os.listdir(FILE_PATH + folder):
+            file_path = os.path.join(FILE_PATH, folder, file_name)
+            if file_path.endswith('.json'):
+                with open(file_path) as f:
+                    manifest = json.load(f)
+                    self.modes[manifest['mode_name']] = Mode(manifest, self)
 
-    def load_button(self):
+    def load_buttons(self):
         logging.debug("Loading Buttons")
         with open(FILE_PATH + 'buttons_manifest.json', 'r') as f:
             manifest = json.load(f)
@@ -135,42 +222,39 @@ class Linto_UI:
         for button in manifest['button'].keys():
             self.buttons[button] = Button(FILE_PATH + 'sprites/' + button, self.event_manager)
             self.buttons[button].set_rect(self.screen, self.buttons_placeholder[manifest['button'][button]['placeholder']])
-            self.buttons[button].visible = manifest['button'][button]['visible']
-            if self.buttons[button].visible :
-                self.buttons_visible.add(self.buttons[button])
-            self.buttons_all.add(self.buttons[button])
 
-    def button_visibility(self, button_name, visible):
-        if visible:
-            if not self.buttons_visible.has(self.buttons[button_name]):
-                self.buttons_visible.add(self.buttons[button_name])
-        else:
-            if self.buttons_visible.has(self.buttons[button_name]):
-                self.buttons_visible.remove(self.buttons[button_name])
+    def play_anim(self, animation):
+        if type(animation) == str:
+            animation = self.animations[animation]
+        self.render_sprites = animation
 
-    def play_anim(self, anim_name):
-        animation = self.animations[anim_name]
-        self.frame_counter = 0
-        if animation.isState:
-            self.current_state = animation
-            self.anim_end = None
-        elif animation.duration != None:
-            self.anim_end = animation.duration
-        self.render_sprites = self.animations[anim_name]
+    def set_mode(self, mode):
+        if type(mode) == str:
+            if mode == "last":
+                mode = self.current_mode.previous_mode
+            else:
+                mode = self.modes[mode]
+        try:
+            mode.set(self.current_mode)
+            self.current_mode = mode
+        except KeyError:
+            logging.warning("Could not set mode {}. Not initialized".format(mode))
+    
+    def set_state(self, state_name):
+        try:
+            self.states[state_name].set()
+            self.current_mode.current_state = self.states[state_name]
+        except KeyError:
+            logging.warning("Could not set state {}. Not initialized".format(state_name))
 
-    def back_to_state(self):
-        # Is called when a one-time animation end to go back to suspended state
-        self.render_sprites = self.current_state
+    def set_buttons(self, buttons):
+        self.buttons_visible.empty()
+        self.buttons_visible.add(buttons)
 
     def run(self):
         clock = pg.time.Clock()
         mouse_sprite = pg.sprite.Sprite()
         while True:
-            if self.anim_end != None:
-                self.frame_counter +=1
-                if self.frame_counter >= self.anim_end:
-                    self.back_to_state()
-            self.frame_counter+=1
             self.background_sprites.update()
             self.background_sprites.draw(self.screen)
             self.render_sprites.update()
@@ -188,8 +272,6 @@ class Linto_UI:
                     collided = pg.sprite.spritecollide(mouse_sprite, self.buttons_visible, False)
                     for sprite in collided:
                         sprite.clicked()
-                    if self.current_state == self.animations['sleeping']:
-                        self.event_manager._resolve_action(self.event_manager.event_binding['broker_msg']["utterance/stop"]['any'])
                 if event.type in [pg.KEYUP] and event.key == pg.K_ESCAPE:
                     self.event_manager.end()
                     exit()
@@ -200,20 +282,15 @@ class Event_Manager(Thread):
         Thread.__init__(self)
         self.config = config
         self.ui = ui
-        self.load_manifest()
         self.alive = True
-        self.anim_lock = False
         self.connected = True
         self.muted = False
         self.counter = 0
 
         #Audio init
         mixer = alsaaudio.Mixer()
-        mixer.setvolume(100)
+        mixer.setvolume(60)
 
-    def load_manifest(self):
-        with open(FILE_PATH + "event_binding.json", 'r') as f:
-            self.event_binding = json.load(f)
 
     @tenacity.retry(wait=tenacity.wait_fixed(5),
             stop=tenacity.stop_after_attempt(24),
@@ -239,10 +316,29 @@ class Event_Manager(Thread):
         self.broker.disconnect()
         
     def _on_broker_connect(self, client, userdata, flags, rc):
+        """ Message received when the Mqtt client connects to the broker.
+        It looks for every broker_message event within the mode and state json file and
+        subscribe to the relevant topics.
+        """
         logging.info("Connected to broker")
-        for topic in self.event_binding['broker_msg'].keys():
-                self.broker.subscribe(topic)
-        self.ui.play_anim('idle')
+        topics = set()
+        files = []
+        # Look within every mode and state file to subscribe to their topics
+        for file_name in [file_name for file_name in os.listdir(FILE_PATH + 'modes') if file_name.endswith('.json')]: 
+            file_path = os.path.join(FILE_PATH, 'modes', file_name)
+            files.append(file_path)
+
+        for file_name in [file_name for file_name in os.listdir(FILE_PATH + 'states') if file_name.endswith('.json')]: 
+            file_path = os.path.join(FILE_PATH, 'states', file_name)
+            files.append(file_path)
+        for file_path in files:
+            with open(file_path, 'r') as f:
+                manifest = json.load(f)
+                for topic_name in manifest['events']['broker_message']:
+                    topics.add(topic_name)
+        for topic in topics:
+            self.broker.subscribe(topic)
+            logging.debug("Subscribed to {}".format(topic))
     
     def _on_broker_disconnect(self, client, userdata, rc):
         logging.debug("Disconnection")
@@ -255,32 +351,31 @@ class Event_Manager(Thread):
         topic = message.topic
         msg = message.payload.decode("utf-8")
         logging.debug("Received message %s on topic %s" % (msg,topic))
-        if msg not in self.event_binding['broker_msg'][topic].keys():
-            if 'any' in self.event_binding['broker_msg'][topic].keys():
-                msg = 'any'
-            else:
-                logging.debug("No matching action for message %s on topic %s" % (msg,topic))
-                return  
-        actions = self.event_binding['broker_msg'][topic][msg]
-        self._resolve_action(actions)
-        self.counter = 0
+        mode_trigger = self.ui.current_mode.events['broker_message']
+        state_trigger = self.ui.current_mode.current_state.events['broker_message']
+        if topic in mode_trigger.keys():
+            if 'any' in mode_trigger[topic].keys():
+                self._resolve_action(mode_trigger[topic]['any'])
+        elif topic in state_trigger.keys():
+            if 'any' in state_trigger[topic].keys():
+                self._resolve_action(state_trigger[topic]['any'])
             
     def touch_input(self, button, value):
         logging.debug('Touch: %s -> %s' % (button, value))
-        if button in self.event_binding['touch_input'].keys():
-            if value in self.event_binding['touch_input'][button].keys():
-                actions = self.event_binding['touch_input'][button][value]
+        mode_trigger = self.ui.current_mode.events['button_clicked']
+        state_trigger = self.ui.current_mode.current_state.events['button_clicked']
+        
+        if button in mode_trigger.keys():
+            if value in mode_trigger[button].keys():
+                actions = mode_trigger[button][value]
                 self._resolve_action(actions)
+        
+        elif button in state_trigger.keys():
+            if value in state_trigger[button].keys():
+                actions = state_trigger[button][value]
+                self._resolve_action(actions)
+        
             
-            # Easter (for Damien)
-            if self.config['easter'] == 'true' and button == 'empty_button':
-                self.counter += 1
-                if self.counter >= 10:
-                    t = Thread(target=self.play_sound, args=['angry'])
-                    t.start()
-                    self.ui.play_anim('angry')
-                    self.counter = 0
-
     def publish(self, topic, msg):
         # Format message looking for tokens
         payload = msg.replace("%DATE", datetime.datetime.now().isoformat())
@@ -294,25 +389,21 @@ class Event_Manager(Thread):
                 self.connected = actions['connexion']
         elif not self.connected:
             return
-        if self.anim_lock and "anim_lock" not in actions:
-            return
         for action in actions.keys():
             if action == 'display':                 
                 self.ui.play_anim(actions["display"])
             elif action == 'publish' and self.broker is not None:
                 self.publish(actions["publish"]['topic'],
                                     actions["publish"]['message'])
-            elif action == 'sound' and self.ui.silenced != True:
+            elif action == 'sound':
                 self.play_sound(actions["sound"])
-            elif action == 'anim_lock':
-                self.anim_lock = actions["anim_lock"]
             elif action == 'volume':
                 self.change_volume(actions['volume'])
-            elif action == 'buttons':
-                for button_name in actions['buttons'].keys():
-                    self.ui.button_visibility(button_name, actions['buttons'][button_name])
-            elif action =='connexion':
-                self.connected = actions['connexion']
+            elif action == 'mode':
+                self.ui.set_mode(actions['mode'])
+            elif action == 'state':
+                print(action)
+                self.ui.set_state(actions['state'])
     
     def change_volume(self, value):
         mixer = alsaaudio.Mixer()
@@ -321,13 +412,11 @@ class Event_Manager(Thread):
     def play_sound(self, name):
         logging.debug("playing sound")
         file_path = os.path.dirname(os.path.abspath(__file__)) + '/sounds/'+ name +'.wav'
-        subprocess.call(['aplay', file_path])
+        subprocess.Popen(['aplay', file_path])
 
     def run(self):
         while self.alive:
-            self.ui.play_anim('com')
             self.broker = self.broker_connect()
-            self.ui.play_anim('idle')
             self.broker.loop_forever(retry_first_connection=True)
 
 def main(args, config):
