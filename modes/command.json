@@ -9,8 +9,8 @@
                     "ring" : "ring_red"
                 }
             },
-            "lintoclient/action/start_meeting": {
-                "any" : {
+            "lintoclient/action": {
+                "start_meeting" : {
                     "mode" : "meeting"
                 }
             }

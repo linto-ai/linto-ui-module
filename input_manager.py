@@ -127,7 +127,7 @@ class Linto_UI:
         self.screen_size = args.resolution
         self.screen = self.init_gui(self.screen_size, args.fullscreen)
         self.center_pos = [v//2 for v in self.screen_size]
-        
+            
         self.render_sprites = pg.sprite.OrderedUpdates()
 
         #Animations
@@ -291,7 +291,6 @@ class Event_Manager(Thread):
         mixer = alsaaudio.Mixer()
         mixer.setvolume(60)
 
-
     @tenacity.retry(wait=tenacity.wait_fixed(5),
             stop=tenacity.stop_after_attempt(24),
             retry=tenacity.retry_if_result(lambda s: s is None),
@@ -323,7 +322,7 @@ class Event_Manager(Thread):
         logging.info("Connected to broker")
         topics = set()
         files = []
-        # Look within every mode and state file to subscribe to their topics
+
         for file_name in [file_name for file_name in os.listdir(FILE_PATH + 'modes') if file_name.endswith('.json')]: 
             file_path = os.path.join(FILE_PATH, 'modes', file_name)
             files.append(file_path)
@@ -351,13 +350,22 @@ class Event_Manager(Thread):
         topic = message.topic
         msg = message.payload.decode("utf-8")
         logging.debug("Received message %s on topic %s" % (msg,topic))
+        payload = json.loads(msg)
+        value = None
+        if 'value' in payload.keys():
+            value = payload['value']        
         mode_trigger = self.ui.current_mode.events['broker_message']
         state_trigger = self.ui.current_mode.current_state.events['broker_message']
+
         if topic in mode_trigger.keys():
-            if 'any' in mode_trigger[topic].keys():
+            if value in mode_trigger[topic].keys():
+                self._resolve_action(mode_trigger[topic][value])
+            elif 'any' in mode_trigger[topic].keys():
                 self._resolve_action(mode_trigger[topic]['any'])
         elif topic in state_trigger.keys():
-            if 'any' in state_trigger[topic].keys():
+            if value in state_trigger[topic].keys():
+                self._resolve_action(state_trigger[topic][value])
+            elif 'any' in state_trigger[topic].keys():
                 self._resolve_action(state_trigger[topic]['any'])
             
     def touch_input(self, button, value):
