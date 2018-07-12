@@ -136,7 +136,6 @@ class Linto_UI:
 
         #Event_Manager
         self.event_manager = Event_Manager(self, config)
-        self.event_manager.start()
 
         #Backgrounds
         self.background_sprites = pg.sprite.Group()
@@ -158,6 +157,7 @@ class Linto_UI:
         self.current_mode = None
         
         self.set_mode('command')
+        self.event_manager.start()
         
     def init_gui(self,resolution, fullscreen: bool):
         pg.display.init()

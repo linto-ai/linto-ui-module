@@ -1,5 +1,5 @@
 {
-    "state_name" : "paused", 
+    "state_name" : "paused",
     "animation" : "paused",
     "buttons" : ["mute_button"],
     "events" : {
@@ -15,7 +15,6 @@
                         "message" : "{\"on\":\"%DATE\"}"
                     }
                 }
-                
             }
         }
     }
