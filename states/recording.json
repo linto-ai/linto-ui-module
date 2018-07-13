@@ -11,8 +11,8 @@
                 "on": {
                     "state" : "paused",
                     "publish" : {
-                    "topic" : "lintoclient/action",
-                    "message" : "{\"on\":\"%(DATE)\", \"value\": \"stop_meeting\"}"
+                    "topic" : "ui/mute_on",
+                    "message" : "{\"on\":\"%(DATE)\"}"
                     }
                 }
 
@@ -21,8 +21,8 @@
                 "clicked" : {
                     "mode": "command",
                     "publish" : {
-                        "topic" : "ui/cancel",
-                        "message" : "{\"on\":\"%(DATE)\"}"
+                        "topic" : "lintoclient/action",
+                        "message" : "{\"on\":\"%(DATE)\", \"value\":\"stop_meeting\"}"
                     }
                 }
             }
