@@ -1,7 +1,7 @@
 {
     "state_name" : "recording", 
     "animation" : "recording",
-    "buttons" : ["recording_button", "mute_button"],
+    "buttons" : ["recording_button", "mute_button", "cancel_button"],
     "events" : {
         "broker_message": {
 
@@ -11,11 +11,20 @@
                 "on": {
                     "state" : "paused",
                     "publish" : {
-                    "topic" : "ui/mute_on",
-                    "message" : "{\"on\":\"%DATE\"}"
+                    "topic" : "lintoclient/action",
+                    "message" : "{\"on\":\"%(DATE)\", \"value\": \"stop_meeting\"}"
                     }
                 }
 
+            },
+            "cancel_button": {
+                "clicked" : {
+                    "mode": "command",
+                    "publish" : {
+                        "topic" : "ui/cancel",
+                        "message" : "{\"on\":\"%(DATE)\"}"
+                    }
+                }
             }
         }
     }

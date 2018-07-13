@@ -16,7 +16,7 @@
                     "mode": "command",
                     "publish": {
                         "topic" : "ui/mute_off",
-                        "message" : "{\"on\":\"%DATE\"}"
+                        "message" : "{\"on\":\"%(DATE)\"}"
                     }
                 }
             }

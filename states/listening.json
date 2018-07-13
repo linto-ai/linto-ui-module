@@ -18,7 +18,7 @@
                     "sound": "beep4",
                     "publish" : {
                         "topic" : "ui/cancel",
-                        "message" : "{\"on\":\"%DATE\"}"
+                        "message" : "{\"on\":\"%(DATE)\"}"
                     }
                 }
             },
@@ -27,7 +27,7 @@
                     "mode": "sleeping",
                     "publish" : {
                         "topic" : "ui/mute_on",
-                        "message" : "{\"on\":\"%DATE\"}"
+                        "message" : "{\"on\":\"%(DATE)\"}"
                     }
                 }
             }           
