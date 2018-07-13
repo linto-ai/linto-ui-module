@@ -3,5 +3,6 @@
         "type" : "value",
         "nb_frames" : 4,
         "frame_width" : 420, 
-        "state_values" : ["full", "mid", "low", "silenced"]
+        "state_values" : ["full", "mid", "low", "silenced"], 
+        "rect" : [0.925,0.5,0.1,0.1]
 }

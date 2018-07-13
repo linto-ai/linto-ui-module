@@ -15,14 +15,18 @@ import pygame as pg
 import paho.mqtt.client as mqtt
 import tenacity
 import json
+
 from pgelement import *
 
 FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
-draw_order= ["body", "eyes", "mouth", "token_right", "token_center", "token_left", "center", "shutter"]
-sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
+
 FPS = 30
 
 class Mode:
+    """ 
+    Mode are a layer on top of states. It has a default state and a set of event triggers on top of the current state's ones.
+    Mode parameters are set in a json manifest file.
+    """
     def __init__(self, manifest: dict, manager):
         self.id = manifest['mode_name']
         self.manager = manager
@@ -30,7 +34,6 @@ class Mode:
         #Default state
         try:
             self.default_state = self.manager.states[manifest['default_state']]
-            
         except KeyError:
             logging.warning("Could not set default_state {} for mode {}.".format(manifest['default_state'], self.id))
             self.default_state = None
@@ -39,6 +42,7 @@ class Mode:
         self.events = manifest['events']
     
     def set(self, previous_mode):
+        """Set this mode as the current mode"""
         logging.debug("Changing to mode {} from mode {}".format(self.id, previous_mode.id if previous_mode is not None else 'None'))
         self.previous_mode = previous_mode
         if self.default_state is not None:
@@ -46,6 +50,10 @@ class Mode:
         self.current_state.set() 
 
 class State:
+    """
+    State instance represents the current state of the system. It is symbolized by a specific animation, a set of buttons and specific event responses.
+    State parameters are set in json manifest file. 
+    """
     def __init__(self, manifest: dict, manager):
         self.id = manifest['state_name']
         self.manager = manager
@@ -66,49 +74,48 @@ class State:
         self.events = manifest['events']
 
     def set(self):
+        """Set this state as the current state"""
         logging.debug("Changing to state {}".format(self.id))
         self.manager.set_buttons(self.buttons)
-        print(self.animation)
         self.manager.play_anim(self.animation)
 
     def __str__(self):
         return "<State: {}>".format(self.id)
 class Animation(pg.sprite.OrderedUpdates):
-    def __init__(self, screen, manifest_path, render_group, end_loop_callback: callable):
+    def __init__(self, screen, manifest, render_group, end_loop_callback: callable):
         pg.sprite.OrderedUpdates.__init__(self)
         self.screen = screen
         self.render_group = render_group
         self.end_loop_callback = end_loop_callback
         self.duration = None
-        self.load_manifest(manifest_path)
+        self.manifest = manifest
+        self.load_manifest()
         
-    def load_manifest(self, manifest_path):
+    def load_manifest(self):
         try:
-            print(manifest_path)
-            json_manifest = json.load(open(manifest_path, 'r'))
             placeholder_man = json.load(open(FILE_PATH + "placeholders.json", 'r'))
+            draw_order = placeholder_man["draw_order"]
             placeholder_man = placeholder_man['placeholders']
-            self.id = json_manifest['id']
-            logging.debug("Loading %s animation" % self.id) 
-            #Load animation info
-            self.type = json_manifest['type']
+            self.id = self.manifest['id']
+            logging.debug("Loading %s animation" % self.id)
+            self.type = self.manifest['type']
             if self.type in ['timed']:
-                self.duration = json_manifest['duration'] * FPS
+                self.duration = self.manifest['duration'] * FPS
         except FileNotFoundError:
-            logging.warning("Could not load animation manifest file %s" % manifest_path)
+            logging.warning("Could not load placeholder manifest file")
             return
 
-        self.isState = json_manifest['type'] == 'state' 
+        self.isState = self.manifest['type'] == 'state'
         # Check or create sprites for each placeholder
         for sprite_ph in draw_order:
-            if sprite_ph not in json_manifest['sprites'].keys():
+            if sprite_ph not in self.manifest['sprites'].keys():
                 continue
-            sprite_info = json_manifest['sprites'][sprite_ph]
-            sprite_type = sprites_dict[sprite_info['mode']]
+            sprite_info = self.manifest['sprites'][sprite_ph]
+            sprite_type = sprites_dict[sprite_info['mode']] #sprite_dict is set in pgelement
             if sprite_type is None:
                 continue
             sprite_name = sprite_info['sprite_name']
-            logging.debug("Adding sprite %s" % sprite_name)
+            logging.debug("Adding sprite {}".format(sprite_name))
             
             if self.type in ['one-time']:
                 sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name, callback=self.end_loop_callback)
@@ -116,8 +123,9 @@ class Animation(pg.sprite.OrderedUpdates):
                 sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name)
             sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
             self.add(sprite)
+    
     def __str__(self):
-        return "<Animation: {} ({} sprites)>".format(self.id, self.sprites)
+        return "<Animation: {} ({})>".format(self.id, self.sprites)
     
 class Linto_UI:
     def __init__(self, args, config):
@@ -190,14 +198,15 @@ class Linto_UI:
     def load_animations(self, folder):
         self.animations = dict()
         logging.debug("Loading animations")
-        with open(FILE_PATH +'animations_manifest.json', 'r') as f:
-            manifest = json.load(f)
-        #loading states
-        for state in manifest.keys():
-            anim = Animation(self.screen, os.path.join(FILE_PATH + folder, state + '.json'), self.render_sprites, lambda s : s)
-            self.animations[state] = anim
+        for file_name in os.listdir(FILE_PATH + folder):
+            file_path = os.path.join(FILE_PATH, folder, file_name)
+            if file_path.endswith(".json"):
+                with open(file_path, 'r') as f:
+                    manifest = json.load(f)
+                    anim = Animation(self.screen, manifest, self.render_sprites, lambda s : s)
+                    self.animations[anim.id] = anim
     
-    def load_states(self, folder):
+    def load_states(self, folder : str='states'):
         for file_name in os.listdir(FILE_PATH + folder):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
@@ -205,7 +214,7 @@ class Linto_UI:
                     manifest = json.load(f)
                     self.states[manifest['state_name']] = State(manifest, self)
     
-    def load_modes(self, folder):
+    def load_modes(self, folder: str='modes'):
         for file_name in os.listdir(FILE_PATH + folder):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
@@ -213,15 +222,16 @@ class Linto_UI:
                     manifest = json.load(f)
                     self.modes[manifest['mode_name']] = Mode(manifest, self)
 
-    def load_buttons(self):
+    def load_buttons(self, folder: str='buttons'):
+        self.buttons = dict()
         logging.debug("Loading Buttons")
-        with open(FILE_PATH + 'buttons_manifest.json', 'r') as f:
-            manifest = json.load(f)
-        self.buttons_placeholder = manifest['placeholder']
-        self.buttons = {}
-        for button in manifest['button'].keys():
-            self.buttons[button] = Button(FILE_PATH + 'sprites/' + button, self.event_manager)
-            self.buttons[button].set_rect(self.screen, self.buttons_placeholder[manifest['button'][button]['placeholder']])
+        for file_name in os.listdir(FILE_PATH + folder):
+            file_path = os.path.join(FILE_PATH, folder, file_name)
+            if file_path.endswith('.json'):
+                with open(file_path) as f:
+                    manifest = json.load(f)
+                    self.buttons[manifest['name']] = Button(FILE_PATH + 'buttons/' + manifest['name'], self.event_manager)
+                    self.buttons[manifest['name']].set_rect(self.screen, manifest['rect'])
 
     def play_anim(self, animation):
         if type(animation) == str:
@@ -278,6 +288,10 @@ class Linto_UI:
             clock.tick(FPS)
 
 class Event_Manager(Thread):
+    """
+    Event manager deal with the input from the MQTT broker and the touchscreen inputs.
+    It matchs each input with the responses defined for the current mode or states.
+    """
     def __init__(self, ui: Linto_UI, config):
         Thread.__init__(self)
         self.config = config
@@ -315,13 +329,13 @@ class Event_Manager(Thread):
         self.broker.disconnect()
         
     def _on_broker_connect(self, client, userdata, flags, rc):
-        """ Message received when the Mqtt client connects to the broker.
-        It looks for every broker_message event within the mode and state json file and
+        """ Function called when the Mqtt client connects to the broker.
+        It looks for every broker_message event within the modes and states json files and
         subscribe to the relevant topics.
         """
         logging.info("Connected to broker")
-        topics = set()
-        files = []
+        topics = set() # Set of topics: Prevents duplicate
+        files = [] # List of json files
 
         for file_name in [file_name for file_name in os.listdir(FILE_PATH + 'modes') if file_name.endswith('.json')]: 
             file_path = os.path.join(FILE_PATH, 'modes', file_name)
@@ -346,14 +360,17 @@ class Event_Manager(Thread):
         self.broker = None
     
     def _on_broker_msg(self, client, userdata, message):
-        #TODO: Modify according to new MQTT message specs
+        
         topic = message.topic
         msg = message.payload.decode("utf-8")
         logging.debug("Received message %s on topic %s" % (msg,topic))
-        payload = json.loads(msg)
         value = None
-        if 'value' in payload.keys():
-            value = payload['value']        
+        try:
+            payload = json.loads(msg)
+            if 'value' in payload.keys():
+                value = payload['value']
+        except:
+            logging.warning('Could not load json from message.')        
         mode_trigger = self.ui.current_mode.events['broker_message']
         state_trigger = self.ui.current_mode.current_state.events['broker_message']
 
@@ -386,7 +403,8 @@ class Event_Manager(Thread):
             
     def publish(self, topic, msg):
         # Format message looking for tokens
-        payload = msg.replace("%DATE", datetime.datetime.now().isoformat())
+        payload = msg.replace("%(DATE)", datetime.datetime.now().isoformat())
+        
         logging.debug("Publishing msg %s on topic %s" % (payload, topic))
         self.broker.publish(topic, payload)
 

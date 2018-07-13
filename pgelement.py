@@ -124,17 +124,18 @@ class Animated_Sprite(Sprite):
             self.image = self.frames[self.curr_frame]
             
 class Button(Sprite):
-    def __init__(self, img_name, event_manager):
-        Sprite.__init__(self,img_name)
+    def __init__(self, sprite_name, event_manager):
+        Sprite.__init__(self,sprite_name)
         self.event_manager = event_manager
-        self.id = img_name
+        self.id = sprite_name
         self.state = 0
         self.frame_counter = 0
         
-        self._read_manifest()
+        self._load_manifest()
 
-    def _read_manifest(self):
-        manifest_name = self.img_name + '.json'
+    def _load_manifest(self):
+        #TODO: Different classes ? 
+        manifest_name = self.id + '.json'
         with open(manifest_name, 'r') as f:
             self.manifest = json.load(f)
         self.id = self.manifest['name']
@@ -203,3 +204,5 @@ class Button(Sprite):
             new_frames.append(f)
         self.frames = new_frames
         self.image = self.frames[0]
+
+sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
