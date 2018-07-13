@@ -8,6 +8,15 @@
                     "mode" : "disconnected",
                     "ring" : "ring_red"
                 }
+            },
+            "tts/speaking/stop": {
+                "any": {
+                    "publish": {
+                        "topic": "ui/mute_on",
+                        "message" : "{\"on\":\"%(DATE)\"}"
+                    }
+                     
+                }
             }
         },
         "button_clicked": {
