@@ -11,8 +11,8 @@
                 "on": {
                     "state" : "paused",
                     "publish" : {
-                    "topic" : "ui/mute_on",
-                    "message" : "{\"on\":\"%(DATE)\"}"
+                    "topic" : "lintoclient/action",
+                    "message" : "{\"on\":\"%(DATE)\", \"value\":\"pause_meeting\"}"
                     }
                 }
 

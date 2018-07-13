@@ -11,8 +11,8 @@
                 "off" : {
                     "state" : "recording",
                     "publish" : {
-                        "topic" : "ui/mute_off",
-                        "message" : "{\"on\":\"%DATE\"}"
+                        "topic" : "lintoclient/action",
+                        "message" : "{\"on\":\"%(DATE)\", \"value\":\"resume_meeting\"}"
                     }
                 }
             }
