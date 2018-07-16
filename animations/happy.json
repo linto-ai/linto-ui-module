@@ -1,7 +1,7 @@
 {
     "id": "happy",
     "type" : "timed",
-    "duration" : 2,
+    "duration" : 0.5,
     "sprites" : {
         "body" : {
             "mode" : "bouncing",

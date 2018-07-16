@@ -2,7 +2,7 @@
 # # -*- coding: utf-8 -*-
 import os, sys
 import datetime
-from threading import Thread
+import threading 
 import subprocess
 import alsaaudio
 from enum import Enum
@@ -51,7 +51,7 @@ class Mode:
 
 class State:
     """
-    State instance represents the current state of the system. It is symbolized by a specific animation, a set of buttons and specific event responses.
+    State instance represents the current state of the system. It is represented by a specific animation, a set of buttons and specific event responses.
     State parameters are set in json manifest file. 
     """
     def __init__(self, manifest: dict, manager):
@@ -81,12 +81,12 @@ class State:
 
     def __str__(self):
         return "<State: {}>".format(self.id)
+
 class Animation(pg.sprite.OrderedUpdates):
-    def __init__(self, screen, manifest, render_group, end_loop_callback: callable):
+    def __init__(self, screen, manifest, render_group):
         pg.sprite.OrderedUpdates.__init__(self)
         self.screen = screen
         self.render_group = render_group
-        self.end_loop_callback = end_loop_callback
         self.duration = None
         self.manifest = manifest
         self.load_manifest()
@@ -98,35 +98,38 @@ class Animation(pg.sprite.OrderedUpdates):
             placeholder_man = placeholder_man['placeholders']
             self.id = self.manifest['id']
             logging.debug("Loading %s animation" % self.id)
-            self.type = self.manifest['type']
-            if self.type in ['timed']:
-                self.duration = self.manifest['duration'] * FPS
         except FileNotFoundError:
             logging.warning("Could not load placeholder manifest file")
             return
 
-        self.isState = self.manifest['type'] == 'state'
         # Check or create sprites for each placeholder
         for sprite_ph in draw_order:
             if sprite_ph not in self.manifest['sprites'].keys():
                 continue
             sprite_info = self.manifest['sprites'][sprite_ph]
-            sprite_type = sprites_dict[sprite_info['mode']] #sprite_dict is set in pgelement
+            sprite_type = sprites_dict[sprite_info['mode']] #sprite_dict is set in pgelement, it associates sprite type with classes
             if sprite_type is None:
                 continue
             sprite_name = sprite_info['sprite_name']
             logging.debug("Adding sprite {}".format(sprite_name))
-            
-            if self.type in ['one-time']:
-                sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name, callback=self.end_loop_callback)
-            else:
-                sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name)
+            sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name)
             sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
             self.add(sprite)
-    
+
     def __str__(self):
         return "<Animation: {} ({})>".format(self.id, self.sprites)
-    
+
+
+class Timed_Animation(Animation):
+    def __init__(self, screen, manifest, render_group):
+        Animation.__init__(self, screen, manifest, render_group)
+        self.type = manifest['type']
+        if self.type == 'timed':
+            self.duration = manifest['duration'] # Duration in frames
+        else:
+            logging.error("Unsupported animation type for {}".format(self.id))
+            exit()
+
 class Linto_UI:
     def __init__(self, args, config):
         self.config = config
@@ -203,7 +206,10 @@ class Linto_UI:
             if file_path.endswith(".json"):
                 with open(file_path, 'r') as f:
                     manifest = json.load(f)
-                    anim = Animation(self.screen, manifest, self.render_sprites, lambda s : s)
+                    if manifest['type'] in ['timed']:
+                        anim = Timed_Animation(self.screen, manifest, self.render_sprites)
+                    else:
+                        anim = Animation(self.screen, manifest, self.render_sprites)
                     self.animations[anim.id] = anim
     
     def load_states(self, folder : str='states'):
@@ -237,6 +243,15 @@ class Linto_UI:
         if type(animation) == str:
             animation = self.animations[animation]
         self.render_sprites = animation
+        if type(animation) is Timed_Animation:
+            t= threading.Thread(target = self.timed_callback, args=(animation.duration, self.play_anim))
+            t.start()
+
+    def timed_callback(self, duration, fun):
+        """ Wait for duration then call the fun function with arguments. """
+        time.sleep(duration)
+        fun(self.current_mode.current_state.animation)
+
 
     def set_mode(self, mode):
         if type(mode) == str:
@@ -273,7 +288,6 @@ class Linto_UI:
             self.buttons_visible.update()
             self.buttons_visible.draw(self.screen)
             pg.display.flip()
-
             # Event manager
             for event in pg.event.get():
                 if event.type in [pg.MOUSEBUTTONUP]:
@@ -287,13 +301,13 @@ class Linto_UI:
                     exit()
             clock.tick(FPS)
 
-class Event_Manager(Thread):
+class Event_Manager(threading.Thread):
     """
     Event manager deal with the input from the MQTT broker and the touchscreen inputs.
     It matchs each input with the responses defined for the current mode or states.
     """
     def __init__(self, ui: Linto_UI, config):
-        Thread.__init__(self)
+        threading.Thread.__init__(self)
         self.config = config
         self.ui = ui
         self.alive = True
@@ -428,8 +442,10 @@ class Event_Manager(Thread):
             elif action == 'mode':
                 self.ui.set_mode(actions['mode'])
             elif action == 'state':
-                print(action)
                 self.ui.set_state(actions['state'])
+            elif action == 'play':
+                self.ui.play_anim(self.ui.animations[actions['play']])
+                
     
     def change_volume(self, value):
         mixer = alsaaudio.Mixer()

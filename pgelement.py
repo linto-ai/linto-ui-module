@@ -4,9 +4,8 @@ import pygame as pg
 import json
 
 class Sprite(pg.sprite.Sprite):
-    def __init__(self, img_name: str, callback=None):
+    def __init__(self, img_name: str):
         pg.sprite.Sprite.__init__(self)
-        self.callback = callback
         self.img_name = img_name
         self.original_image = pg.image.load("%s.png" % img_name)
         self.image = self.original_image
@@ -47,8 +46,8 @@ class Static_Sprite(Sprite):
         Sprite.__init__(self,img_name)
         
 class Bouncing_Sprite(Sprite):
-    def __init__(self, img_name: str, amplitude: int = 5, callback=None):
-        Sprite.__init__(self,img_name, callback=callback)
+    def __init__(self, img_name: str, amplitude: int = 5):
+        Sprite.__init__(self,img_name)
         self.max, self.min = amplitude,-amplitude
         self.curr_v, self.dir = 0, 1
         self.frame_skip = True
@@ -74,8 +73,8 @@ class Rotating_Ring(Sprite):
         self.rotate_center()
 
 class Animated_Sprite(Sprite):
-    def __init__(self, img_name, callback: callable=None):
-        Sprite.__init__(self, img_name, callback=callback)
+    def __init__(self, img_name):
+        Sprite.__init__(self, img_name)
         self.curr_frame = 0
         self.frame_counter = 0
         self._read_manifest()
@@ -114,9 +113,6 @@ class Animated_Sprite(Sprite):
         self.image = self.frames[0]
 
     def update(self):
-        self.frame_counter+=1
-        if self.curr_frame == self.nb_frames - 1 and self.callback != None:
-                self.callback()
         self.frame_counter += 1
         if self.frame_counter >= self.frame_duration:
             self.frame_counter = 0
