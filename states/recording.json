@@ -1,7 +1,7 @@
 {
     "state_name" : "recording", 
     "animation" : "recording",
-    "buttons" : ["recording_button", "mute_button", "cancel_button"],
+    "buttons" : ["recording_button", "mute_button", "cancel_button", "empty_button"],
     "events" : {
         "broker_message": {
 
@@ -24,6 +24,11 @@
                         "topic" : "lintoclient/action",
                         "message" : "{\"on\":\"%(DATE)\", \"value\":\"stop_meeting\"}"
                     }
+                }
+            },
+            "empty_button": {
+                "clicked" : {
+                    "play" : "happy_meeting"
                 }
             }
         }

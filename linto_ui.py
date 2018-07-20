@@ -244,14 +244,13 @@ class Linto_UI:
             animation = self.animations[animation]
         self.render_sprites = animation
         if type(animation) is Timed_Animation:
-            t= threading.Thread(target = self.timed_callback, args=(animation.duration, self.play_anim))
+            t= threading.Thread(target = self.timed_animation_callback, args=(animation.duration,))
             t.start()
 
-    def timed_callback(self, duration, fun):
+    def timed_animation_callback(self, duration):
         """ Wait for duration then call the fun function with arguments. """
         time.sleep(duration)
-        fun(self.current_mode.current_state.animation)
-
+        self.play_anim(self.current_mode.current_state.animation)
 
     def set_mode(self, mode):
         if type(mode) == str:
@@ -470,7 +469,7 @@ if __name__ == '__main__':
     config.read(FILE_PATH + "config.conf")
     config = config['CONFIG']
     logging.basicConfig(level=logging.DEBUG if config['debug'] == 'true' else logging.INFO, format="%(levelname)8s %(asctime)s %(message)s ")
-    parser = argparse.ArgumentParser(description='GUI interface to record audio samples for wake word corpus building')
+    parser = argparse.ArgumentParser(description='GUI interface for the LinTo device')
     parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[480,480], help="Screen resolution")
     parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
     args = parser.parse_args()
