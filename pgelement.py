@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # # -*- coding: utf-8 -*-
+import time
 import pygame as pg
 import json
+from typing import Union
 
 class Sprite(pg.sprite.Sprite):
     def __init__(self, img_name: str):
@@ -202,3 +204,48 @@ class Button(Sprite):
         self.image = self.frames[0]
 
 sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
+
+class TextBox(pg.sprite.Sprite):
+    def __init__(self, text : str = "Text", 
+                       pos  : tuple = (0,0), 
+                       font : str = "Comic Sans MS",
+                       font_size : int = 30,
+                       color : tuple = (125,125,125)):
+        super().__init__()
+        self.text = text
+        self.pos = pos
+        self.font = pg.font.SysFont(font, font_size)
+        self.color = color
+        self._create_surface()
+        
+    def _create_surface(self):
+        self.image = self.font.render(self.text, False, self.color)
+        self.rect = pg.Rect(self.pos[0], self.pos[1], self.image.get_rect().width, self.image.get_rect().height)
+
+    def set_text(self, text):
+        self.text = text
+        self._create_surface()
+
+    def update(self):
+        pass
+
+
+class TextTimer(TextBox):
+    def __init__(self, pos):
+        super().__init__("00:00:00", pos)
+        self.start_time = time.time()
+    
+    def start_timer(self, duration : "Duration in minutes"):
+        self.start_time = time.time()
+        self.end_time = self.start_time + duration * 60
+
+    def update(self):
+        remaining_time = self.end_time - self.start_time
+        sign = '+' if remaining_time >= 0 else '-'
+        minutes = remaining_time / 60
+        hours = minutes / 60
+        minutes -= 60 * hours
+        remaining_time -= (hours * 3600 + minutes * 60)
+        
+        self.text = "{}{:02}:{:02}:{:02}".format(sign, hours, minutes, remaining_time)
+
