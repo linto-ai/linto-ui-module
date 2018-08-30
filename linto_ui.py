@@ -168,10 +168,12 @@ class Linto_UI:
         self.current_mode = None
         
         self.set_mode('command')
+        
         self.event_manager.start()
         
     def init_gui(self,resolution, fullscreen: bool):
         pg.display.init()
+        pg.font.init()
         if not self.config['debug'] == 'true':
             pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0)) # set the cursor invisible
         return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
@@ -191,6 +193,7 @@ class Linto_UI:
             self.rings[color].set_rect(self.screen, placeholder_man['ring'])
         self.set_ring('ring_blue')
         self.background_sprites.add(self.background)
+        self.background_sprites.add(TextBox("prototype {}".format(self.config['version']),(2,2)))
     
     def set_ring(self, ring_color):
         if ring_color in self.rings.keys():
@@ -254,10 +257,7 @@ class Linto_UI:
 
     def set_mode(self, mode):
         if type(mode) == str:
-            if mode == "last":
-                mode = self.current_mode.previous_mode
-            else:
-                mode = self.modes[mode]
+            mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
         try:
             mode.set(self.current_mode)
             self.current_mode = mode
