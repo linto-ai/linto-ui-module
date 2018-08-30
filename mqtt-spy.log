@@ -208,3 +208,12 @@ WillDestination             :  null
 2018-08-30 11:42:13,157 INFO  [JavaFX Application Thread     ] [MqttSubscriptionViewManager   ]  - Creating subscription for #
 2018-08-30 11:42:13,341 INFO  [JavaFX Application Thread     ] [BaseMqttConnection            ]  - Subscribed to #
 2018-08-30 11:43:29,636 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 16:08:08,242 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 16:21:17,427 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 16:41:25,962 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 16:49:05,897 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 16:49:39,929 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 17:23:29,027 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 17:29:22,732 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 17:30:43,638 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"
+2018-08-30 17:31:14,206 INFO  [JavaFX Application Thread     ] [MqttAsyncConnection           ]  - Publishing message on topic "lintoclient/action". Payload size = "34"

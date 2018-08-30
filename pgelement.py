@@ -208,13 +208,14 @@ sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated
 class TextBox(pg.sprite.Sprite):
     def __init__(self, text : str = "Text", 
                        pos  : tuple = (0,0), 
-                       font : str = "Comic Sans MS",
+                       font_name : str = "Comic Sans MS",
                        font_size : int = 30,
                        color : tuple = (125,125,125)):
         super().__init__()
         self.text = text
         self.pos = pos
-        self.font = pg.font.SysFont(font, font_size)
+        self.font_name = font_name
+        self.font = pg.font.SysFont(font_name, font_size)
         self.color = color
         self._create_surface()
         
@@ -224,6 +225,14 @@ class TextBox(pg.sprite.Sprite):
 
     def set_text(self, text):
         self.text = text
+        self._create_surface()
+    
+    def set_font_size(self, font_size : int):
+        self.font = pg.font.SysFont(self.font_name, font_size)
+        self._create_surface()
+
+    def set_color(self, color : tuple):
+        self.color = color
         self._create_surface()
 
     def update(self):

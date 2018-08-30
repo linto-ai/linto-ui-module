@@ -195,7 +195,8 @@ class Linto_UI:
         self.background_sprites.add(self.background)
         self.background_sprites.add(TextBox("prototype {}".format(self.config['version']),(2,2)))
         timer = TextTimer((380,2))
-        timer.start_timer(0)
+        timer.start_timer(1)
+        timer.set_font_size(80)
         self.background_sprites.add(timer)
 
     def set_ring(self, ring_color):

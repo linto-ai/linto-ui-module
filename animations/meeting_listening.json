@@ -1,5 +1,5 @@
 {
-    "id": "meeting_sleeping",
+    "id": "meeting_listening",
     "type" : "state",
     "sprites" : {
         "body" : {
@@ -8,14 +8,15 @@
         },
         "eyes" : {
             "mode" : "bouncing",
-            "sprite_name" : "eyes_glasses_sleepy"
+            "sprite_name" : "eyes_glasses_side"
         },
         "mouth" : {
-            "mode" : "static",
-            "sprite_name" : "mouth_strait"
+            "mode" : "bouncing",
+            "sprite_name" : "mouth_side"
         },
         "token_right" : {
-            "mode" : "none"
+            "mode" : "animated",
+            "sprite_name" : "think_in"
         },
         "token_center" : {
             "mode" : "none"
@@ -27,4 +28,5 @@
             "mode" : "none"
         }
     }
+
 }

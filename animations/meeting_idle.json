@@ -1,5 +1,5 @@
 {
-    "id": "recording",
+    "id": "meeting_idle",
     "type" : "state",
     "sprites" : {
         "body" : {

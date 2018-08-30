@@ -1,6 +1,6 @@
 {
     "mode_name" : "meeting", 
-    "default_state" : "recording",
+    "default_state" : "meeting_idle",
     "events" : {
         "broker_message": {
             "lintoclient/disconnected" : {

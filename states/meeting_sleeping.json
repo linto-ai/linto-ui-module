@@ -1,6 +1,6 @@
 {
-    "state_name" : "paused",
-    "animation" : "paused",
+    "state_name" : "meeting_sleeping",
+    "animation" : "meeting_sleeping",
     "buttons" : ["mute_button"],
     "events" : {
         "broker_message": {
@@ -9,7 +9,7 @@
         "button_clicked": {
             "mute_button": {
                 "off" : {
-                    "state" : "recording",
+                    "state" : "meeting_idle",
                     "publish" : {
                         "topic" : "lintoclient/action",
                         "message" : "{\"on\":\"%(DATE)\", \"value\":\"resume_meeting\"}"
