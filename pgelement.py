@@ -240,12 +240,13 @@ class TextTimer(TextBox):
         self.end_time = self.start_time + duration * 60
 
     def update(self):
-        remaining_time = self.end_time - self.start_time
-        sign = '+' if remaining_time >= 0 else '-'
-        minutes = remaining_time / 60
-        hours = minutes / 60
+        remaining_time = self.end_time - time.time()
+        sign = '-' if remaining_time >= 0 else '+'
+        remaining_time = abs(remaining_time)
+        minutes = remaining_time // 60
+        hours = minutes // 60
         minutes -= 60 * hours
         remaining_time -= (hours * 3600 + minutes * 60)
-        
-        self.text = "{}{:02}:{:02}:{:02}".format(sign, hours, minutes, remaining_time)
+        self.text = "{}{:02d}:{:02d}:{:02d}".format(sign, int(hours), int(minutes), int(remaining_time))
+        self._create_surface()
 
