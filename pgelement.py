@@ -5,6 +5,15 @@ import pygame as pg
 import json
 from typing import Union
 
+
+"""  BUTTONS
+The following classes describe sprites elements with different behaviors.
+They inherits from the Sprite parent class that implements basics functions.
+All sprite class must have an update() function aswell as a image(pygame.Surface) and a rect(pygame.Rect) values
+sprites_dict dictionnary is the list of the different sprites used in the main program to associate manifest sprite mode with proper class
+"""
+
+
 class Sprite(pg.sprite.Sprite):
     def __init__(self, img_name: str):
         pg.sprite.Sprite.__init__(self)
@@ -120,7 +129,12 @@ class Animated_Sprite(Sprite):
             self.frame_counter = 0
             self.curr_frame = (self.curr_frame + 1) % self.nb_frames
             self.image = self.frames[self.curr_frame]
-            
+
+sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
+
+""" BUTTONS
+The following classes describes buttons classes with differents behaviors
+"""
 class Button(Sprite):
     def __init__(self, sprite_name, event_manager):
         Sprite.__init__(self,sprite_name)
@@ -203,8 +217,10 @@ class Button(Sprite):
         self.frames = new_frames
         self.image = self.frames[0]
 
-sprites_dict = {'static' : Static_Sprite, 'bouncing': Bouncing_Sprite, 'animated': Animated_Sprite, 'none': None}
 
+""" TEXT
+The following classes describe text display classes. 
+"""
 class TextBox(pg.sprite.Sprite):
     def __init__(self, text : str = "Text", 
                        pos  : tuple = (0,0), 
