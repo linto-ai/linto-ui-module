@@ -2,6 +2,7 @@
     "state_name" : "error", 
     "animation" : "error",
     "buttons" : [],
+    "captation" : false,
     "events" : {
         "broker_message": {
             

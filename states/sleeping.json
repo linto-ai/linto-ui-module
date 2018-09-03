@@ -2,6 +2,7 @@
     "state_name" : "sleeping", 
     "animation" : "sleeping",
     "buttons" : ["empty_button", "mute_button"],
+    "captation" : false,
     "events" : {
         "broker_message": {
             

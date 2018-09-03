@@ -1,13 +1,13 @@
 {
-    "state_name" : "listening", 
-    "animation" : "listening",
-    "buttons" : ["empty_button", "mute_button", "volume_button", "cancel_button"],
+    "state_name" : "meeting_listening", 
+    "animation" : "meeting_listening",
+    "buttons" : ["mute_button", "volume_button", "cancel_button", "recording_button"],
     "captation" : false,
     "events" : {
         "broker_message": {
             "utterance/stop" :{
                 "any":{
-                    "state": "idle",
+                    "state": "meeting_idle",
                     "sound": "beep2"
                 }
             }
@@ -15,7 +15,7 @@
         "button_clicked": {
             "cancel_button": {
                 "clicked" : {
-                    "state": "idle",
+                    "state": "meeting_idle",
                     "sound": "beep4",
                     "publish" : {
                         "topic" : "ui/cancel",
@@ -25,7 +25,7 @@
             },
             "mute_button": {
                 "on" : {
-                    "mode": "sleeping",
+                    "mode": "meeting_sleeping",
                     "publish" : {
                         "topic" : "ui/mute_on",
                         "message" : "{\"on\":\"%(DATE)\"}"

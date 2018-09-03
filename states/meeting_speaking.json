@@ -1,14 +1,13 @@
 {
-    "state_name" : "listening", 
-    "animation" : "listening",
+    "state_name" : "meeting_speaking", 
+    "animation" : "meeting_speaking",
     "buttons" : ["empty_button", "mute_button", "volume_button", "cancel_button"],
     "captation" : false,
     "events" : {
         "broker_message": {
-            "utterance/stop" :{
+            "tts/speaking/stop" :{
                 "any":{
-                    "state": "idle",
-                    "sound": "beep2"
+                    "state": "idle"
                 }
             }
         },
@@ -16,7 +15,6 @@
             "cancel_button": {
                 "clicked" : {
                     "state": "idle",
-                    "sound": "beep4",
                     "publish" : {
                         "topic" : "ui/cancel",
                         "message" : "{\"on\":\"%(DATE)\"}"
@@ -31,7 +29,7 @@
                         "message" : "{\"on\":\"%(DATE)\"}"
                     }
                 }
-            }           
+            }
         }
     }
 }
