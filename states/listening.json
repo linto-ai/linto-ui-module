@@ -2,7 +2,7 @@
     "state_name" : "listening", 
     "animation" : "listening",
     "buttons" : ["empty_button", "mute_button", "volume_button", "cancel_button"],
-    "captation" : false,
+    "wuw_spotting" : false,
     "events" : {
         "broker_message": {
             "utterance/stop" :{

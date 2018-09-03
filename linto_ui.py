@@ -73,11 +73,15 @@ class State:
         #Events
         self.events = manifest['events']
 
+        #Captation
+        self.wuw_spotting = manifest['wuw_spotting']
+
     def set(self):
         """Set this state as the current state"""
         logging.debug("Changing to state {}".format(self.id))
         self.manager.set_buttons(self.buttons)
         self.manager.play_anim(self.animation)
+        self.manager.spotter_status(self.wuw_spotting)
 
     def __str__(self):
         return "<State: {}>".format(self.id)
@@ -111,7 +115,7 @@ class Animation(pg.sprite.OrderedUpdates):
             if sprite_type is None:
                 continue
             sprite_name = sprite_info['sprite_name']
-            logging.debug("Adding sprite {}".format(sprite_name))
+            #logging.debug("Adding sprite {}".format(sprite_name))
             sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name)
             sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
             self.add(sprite)
@@ -168,7 +172,6 @@ class Linto_UI:
         self.current_mode = None
         
         self.set_mode('command')
-        
         self.event_manager.start()
         
     def init_gui(self,resolution, fullscreen: bool):
@@ -262,11 +265,11 @@ class Linto_UI:
     def set_mode(self, mode):
         if type(mode) == str:
             mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
-        try:
-            mode.set(self.current_mode)
-            self.current_mode = mode
-        except KeyError:
-            logging.warning("Could not set mode {}. Not initialized".format(mode))
+        #try:
+        mode.set(self.current_mode)
+        self.current_mode = mode
+        #except KeyError:
+        logging.warning("Could not set mode {}.".format(mode))
     
     def set_state(self, state_name):
         try:
@@ -278,6 +281,9 @@ class Linto_UI:
     def set_buttons(self, buttons):
         self.buttons_visible.empty()
         self.buttons_visible.add(buttons)
+
+    def spotter_status(self, status : bool):
+        self.event_manager.publish(self.config["wuw_topic"], '{"on":"%(DATE)", "value":"'+ str(status) + '"}')
 
     def run(self):
         clock = pg.time.Clock()
@@ -315,8 +321,7 @@ class Event_Manager(threading.Thread):
         self.ui = ui
         self.alive = True
         self.connected = True
-        self.muted = False
-        self.counter = 0
+        self.broker = None
 
         #Audio init
         mixer = alsaaudio.Mixer()
@@ -417,13 +422,13 @@ class Event_Manager(threading.Thread):
                 actions = state_trigger[button][value]
                 self._resolve_action(actions)
         
-            
     def publish(self, topic, msg):
         # Format message looking for tokens
-        payload = msg.replace("%(DATE)", datetime.datetime.now().isoformat())
-        
-        logging.debug("Publishing msg %s on topic %s" % (payload, topic))
-        self.broker.publish(topic, payload)
+        if self.broker is not None:
+            payload = msg.replace("%(DATE)", datetime.datetime.now().isoformat())
+            
+            logging.debug("Publishing msg %s on topic %s" % (payload, topic))
+            self.broker.publish(topic, payload)
 
     def _resolve_action(self, actions):
         if 'ring' in actions.keys():

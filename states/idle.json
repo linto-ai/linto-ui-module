@@ -2,7 +2,7 @@
     "state_name" : "idle", 
     "animation" : "idle",
     "buttons" : ["volume_button", "mute_button", "empty_button"],
-    "captation" : true,
+    "wuw_spotting" : true,
     "events" : {
         "broker_message": {
             "utterance/start": {

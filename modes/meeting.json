@@ -9,13 +9,9 @@
                     "ring" : "ring_red"
                 }
             },
-            "tts/speaking/stop": {
-                "any": {
-                    "publish": {
-                        "topic": "ui/mute_on",
-                        "message" : "{\"on\":\"%(DATE)\"}"
-                    }
-                     
+            "lintoclient/action": {
+                "stop_meeting": {
+                    "mode" : "command"
                 }
             }
         },

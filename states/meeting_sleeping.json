@@ -2,7 +2,7 @@
     "state_name" : "meeting_sleeping",
     "animation" : "meeting_sleeping",
     "buttons" : ["mute_button"],
-    "captation" : false,
+    "wuw_spotting" : false,
     "events" : {
         "broker_message": {
 

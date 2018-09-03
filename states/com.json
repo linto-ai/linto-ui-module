@@ -2,7 +2,7 @@
     "state_name" : "com", 
     "animation" : "com",
     "buttons" : ["empty_button"],
-    "captation" : false,
+    "wuw_spotting" : false,
     "events" : {
         "broker_message": {
             "tts/speaking/start" :{

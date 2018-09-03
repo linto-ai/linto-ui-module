@@ -2,7 +2,7 @@
     "state_name" : "meeting_idle", 
     "animation" : "meeting_idle",
     "buttons" : ["recording_button", "mute_button", "cancel_button", "empty_button"],
-    "captation" : true,
+    "wuw_spotting" : true,
     "events" : {
         "broker_message": {
             "utterance/start": {
