@@ -412,15 +412,13 @@ class Event_Manager(threading.Thread):
         mode_trigger = self.ui.current_mode.events['button_clicked']
         state_trigger = self.ui.current_mode.current_state.events['button_clicked']
         
-        if button in mode_trigger.keys():
-            if value in mode_trigger[button].keys():
-                actions = mode_trigger[button][value]
-                self._resolve_action(actions)
+        if button in mode_trigger.keys() and value in mode_trigger[button].keys():
+            actions = mode_trigger[button][value]
+            self._resolve_action(actions)
         
-        elif button in state_trigger.keys():
-            if value in state_trigger[button].keys():
-                actions = state_trigger[button][value]
-                self._resolve_action(actions)
+        elif button in state_trigger.keys() and value in state_trigger[button].keys():
+            actions = state_trigger[button][value]
+            self._resolve_action(actions)
         
     def publish(self, topic, msg):
         # Format message looking for tokens

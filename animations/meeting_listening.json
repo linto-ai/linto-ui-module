@@ -12,7 +12,7 @@
         },
         "mouth" : {
             "mode" : "bouncing",
-            "sprite_name" : "mouth_side"
+            "sprite_name" : "mouth_side2"
         },
         "token_right" : {
             "mode" : "animated",

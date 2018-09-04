@@ -7,7 +7,7 @@
         "broker_message": {
             "tts/speaking/start" : {
                 "any": {
-                    "state": "meeting_talking"
+                    "state": "meeting_speaking"
                 }
             }
         },
