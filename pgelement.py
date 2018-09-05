@@ -75,19 +75,19 @@ class Bouncing_Sprite(Sprite):
         speed -- number of pixels to move at each frame
         """
         super().__init__(sprite_path)
-        self.pos = self.rect[:2] # Needed to discriminate base position from current positio
+        self.pos = self.rect.y
         self.curr_offset, self.direction = 0, True
         self.amplitude = amplitude
         self.speed =  speed
 
     def set_pos(self, pos : Union[list, tuple], center: bool = False):
         super().set_pos(pos, center)
-        self.pos = self.rect[:2]
+        self.pos = self.rect.y
 
     def update(self):
         move = self.speed * (1 if self.direction else -1)
         self.curr_offset += move
-        self.rect.y = int(self.pos[1] + self.curr_offset)
+        self.rect.y = int(self.pos + self.curr_offset)
         if abs(self.curr_offset) > self.amplitude:
             self.direction = not self.direction
         
