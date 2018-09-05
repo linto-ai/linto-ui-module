@@ -24,7 +24,7 @@
         },
         "button_clicked": {
             "mute_button": {
-                "on": {
+                "true": {
                     "state" : "meeting_sleeping",
                     "publish" : {
                     "topic" : "lintoclient/action",

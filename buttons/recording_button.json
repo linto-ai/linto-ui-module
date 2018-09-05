@@ -1,6 +1,6 @@
 {
         "name" : "recording_button",
-        "type" : "animated",
+        "type" : "animated_switch",
         "nb_frames" : 2,
         "frame_duration" : 30,
         "frame_width" : 256, 

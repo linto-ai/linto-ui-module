@@ -12,7 +12,7 @@
         },
         "button_clicked": {
             "mute_button":{
-                "off" : {
+                "false" : {
                     "mode": "command",
                     "publish": {
                         "topic" : "ui/mute_off",

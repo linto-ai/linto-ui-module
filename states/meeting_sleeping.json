@@ -9,7 +9,7 @@
         },
         "button_clicked": {
             "mute_button": {
-                "off" : {
+                "false" : {
                     "state" : "meeting_idle",
                     "publish" : {
                         "topic" : "lintoclient/action",

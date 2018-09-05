@@ -111,14 +111,12 @@ class Animation(pg.sprite.OrderedUpdates):
             if sprite_ph not in self.manifest['sprites'].keys():
                 continue
             sprite_info = self.manifest['sprites'][sprite_ph]
-            sprite_type = sprites_dict[sprite_info['mode']] #sprite_dict is set in pgelement, it associates sprite type with classes
-            if sprite_type is None:
+            sprite_mode = sprite_info['mode']
+            if sprite_mode in [None, 'none', 'None']:
                 continue
             sprite_name = sprite_info['sprite_name']
             #logging.debug("Adding sprite {}".format(sprite_name))
-            sprite = sprite_type(FILE_PATH + "sprites/" + sprite_name)
-            sprite.set_rect(self.screen,placeholder_man[sprite_ph], center=True)
-            self.add(sprite)
+            self.add(SpriteFactory(FILE_PATH + "sprites/" + sprite_name, sprite_mode, self.screen, placeholder_man[sprite_ph]))
 
     def __str__(self):
         return "<Animation: {} ({})>".format(self.id, self.sprites)
@@ -192,7 +190,7 @@ class Linto_UI:
         placeholder_man = json.load(open(FILE_PATH + "placeholders.json", 'r'))
         placeholder_man = placeholder_man['placeholders']
         for color in ['ring_red', 'ring_blue', 'ring_green']:
-            self.rings[color] = Static_Sprite(FILE_PATH + 'sprites/' + color)
+            self.rings[color] = Sprite(FILE_PATH + 'sprites/' + color + '.png')
             self.rings[color].set_rect(self.screen, placeholder_man['ring'])
         self.set_ring('ring_blue')
         self.background_sprites.add(self.background)
@@ -244,10 +242,8 @@ class Linto_UI:
         for file_name in os.listdir(FILE_PATH + folder):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
-                with open(file_path) as f:
-                    manifest = json.load(f)
-                    self.buttons[manifest['name']] = Button(FILE_PATH + 'buttons/' + manifest['name'], self.event_manager)
-                    self.buttons[manifest['name']].set_rect(self.screen, manifest['rect'])
+                button = Button_Factory(file_path, self.screen, self.event_manager)
+                self.buttons[button.id] = button
 
     def play_anim(self, animation):
         if type(animation) == str:
