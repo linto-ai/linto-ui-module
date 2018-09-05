@@ -447,7 +447,8 @@ class Event_Manager(threading.Thread):
                 self.ui.set_state(actions['state'])
             elif action == 'play':
                 self.ui.play_anim(self.ui.animations[actions['play']])
-                
+            elif action == 'wuw_spotting':
+                self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value"="' + self.ui.animations[actions['wuw_spotting']] + '"}')
     
     def change_volume(self, value):
         mixer = alsaaudio.Mixer()
