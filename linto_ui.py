@@ -173,6 +173,12 @@ class Linto_UI:
         self.event_manager.start()
         
     def init_gui(self,resolution, fullscreen: bool):
+        """ Init pygame modules and set the display surface
+        
+        Keyword arguments:
+        resolution -- set the display resolution [width, heigth]
+        fullscreen -- (boolean) Set display to fullscreen
+        """
         pg.display.init()
         pg.font.init()
         if not self.config['debug'] == 'true':
@@ -180,6 +186,9 @@ class Linto_UI:
         return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
 
     def init_background_sprites(self):
+        """ Create background element such as background color, circles and ring.
+        Background elements aren't modified with state changes, there are meant to remain static.
+        """
         background = pg.Surface(self.screen_size)
         background.fill((0,0,0))
         pg.draw.circle(background,(50,50,50),self.center_pos, self.center_pos[0], 0)
@@ -195,18 +204,28 @@ class Linto_UI:
         self.set_ring('ring_blue')
         self.background_sprites.add(self.background)
         self.background_sprites.add(TextBox("prototype {}".format(self.config['version']),(2,2)))
-        timer = TextTimer((380,2))
+        timer = TextTimer((340,2))
         timer.start_timer(1)
-        timer.set_font_size(80)
+        timer.set_font_size(40)
         self.background_sprites.add(timer)
 
-    def set_ring(self, ring_color):
+    def set_ring(self, ring_color: str):
+        """ Change the outlining ring color
+
+        Keyword arguments:
+        ringcolor -- Either 'red', 'green' or 'blue' 
+        """
         if ring_color in self.rings.keys():
             self.background.image.blit(self.rings[ring_color].image, [0,0])
         else:
             logging.warning('UI: Tried to set unknown ring color %s' % ring_color)
 
-    def load_animations(self, folder):
+    def load_animations(self, folder: 'animation folder'):
+        """Load all the .json file in a specified folder as animations.
+        
+        Keyword arguments:
+        folder -- An absolute path to a folder containing .json animation manifests
+        """
         self.animations = dict()
         logging.debug("Loading animations")
         for file_name in os.listdir(FILE_PATH + folder):
@@ -221,6 +240,11 @@ class Linto_UI:
                     self.animations[anim.id] = anim
     
     def load_states(self, folder : str='states'):
+        """Load all the .json file in a specified folder as states.
+        
+        Keyword arguments:
+        folder -- An absolute path to a folder containing .json state manifests
+        """
         for file_name in os.listdir(FILE_PATH + folder):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
@@ -229,6 +253,11 @@ class Linto_UI:
                     self.states[manifest['state_name']] = State(manifest, self)
     
     def load_modes(self, folder: str='modes'):
+        """Load all the .json file in a specified folder as modes.
+        
+        Keyword arguments:
+        folder -- An absolute path to a folder containing .json mode manifests
+        """
         for file_name in os.listdir(FILE_PATH + folder):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
@@ -237,6 +266,11 @@ class Linto_UI:
                     self.modes[manifest['mode_name']] = Mode(manifest, self)
 
     def load_buttons(self, folder: str='buttons'):
+        """Load all the .json file in a specified folder as buttons.
+        
+        Keyword arguments:
+        folder -- An absolute path to a folder containing .json button manifests
+        """
         self.buttons = dict()
         logging.debug("Loading Buttons")
         for file_name in os.listdir(FILE_PATH + folder):
@@ -245,20 +279,29 @@ class Linto_UI:
                 button = Button_Factory(file_path, self.screen, self.event_manager)
                 self.buttons[button.id] = button
 
-    def play_anim(self, animation):
+    def play_anim(self, animation : Union[Animation, str]):
+        """ Display an animation.
+
+        Keyword arguments:
+        animation -- Either an animation instance or the animation name.
+        """
         if type(animation) == str:
             animation = self.animations[animation]
         self.render_sprites = animation
         if type(animation) is Timed_Animation:
-            t= threading.Thread(target = self.timed_animation_callback, args=(animation.duration,))
+            t= threading.Thread(target = self._timed_animation_callback, args=(animation.duration,))
             t.start()
 
-    def timed_animation_callback(self, duration):
-        """ Wait for duration then call the fun function with arguments. """
+    def _timed_animation_callback(self, duration):
         time.sleep(duration)
         self.play_anim(self.current_mode.current_state.animation)
 
     def set_mode(self, mode):
+        """ Change the current mode
+
+        Keyword arguments:
+        mode -- Mode name or instance.
+        """
         if type(mode) == str:
             mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
         #try:
@@ -267,7 +310,12 @@ class Linto_UI:
         #except KeyError:
         logging.warning("Could not set mode {}.".format(mode))
     
-    def set_state(self, state_name):
+    def set_state(self, state_name: str):
+        """ Change the current state
+
+        Keyword arguments:
+        state_name -- state name.
+        """
         try:
             self.states[state_name].set()
             self.current_mode.current_state = self.states[state_name]
@@ -275,13 +323,24 @@ class Linto_UI:
             logging.warning("Could not set state {}. Not initialized".format(state_name))
 
     def set_buttons(self, buttons):
+        """ Clear visible buttons and display buttons in the list 
+        
+        Keyword arguments:
+        buttons -- a list of Buttons"""
         self.buttons_visible.empty()
         self.buttons_visible.add(buttons)
 
     def spotter_status(self, status : bool):
+        """ Send a message on the pipeline on wuw_topic (defined in config file) in order to activate or deactivate wake-up-word spotting
+
+        Keyword arguments:
+        status -- (boolean) True to allow spotting or false to deactivate it.
+        """
         self.event_manager.publish(self.config["wuw_topic"], '{"on":"%(DATE)", "value":"'+ str(status) + '"}')
 
     def run(self):
+        """ Main loop of the program. Update sprites and catch events. 
+        """
         clock = pg.time.Clock()
         mouse_sprite = pg.sprite.Sprite()
         while True:
@@ -339,7 +398,7 @@ class Event_Manager(threading.Thread):
             return broker
         except:
             logging.warning("Failed to connect to broker (Retrying after 5s)")
-            self.ui.play_anim('com')
+            self.ui.play_anim('error')
             return None
     
     def end(self):
