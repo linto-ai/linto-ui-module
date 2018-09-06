@@ -11,11 +11,29 @@
             },
             "lintoclient/action": {
                 "stop_meeting": {
-                    "mode" : "command"
+                    "mode" : "command",
+                    "publish" : {
+                        "topic" : "lintoclient/action",
+                        "message" : "{\"on\":\"%(DATE)\", \"value\":\"stop_recording\"}"
+                    }
                 }
             }
         },
         "button_clicked": {
+            "recording_button": {
+                "true" : {
+                    "publish" : {
+                        "topic" : "lintoclient/action",
+                        "message" : "{\"on\":\"%(DATE)\", \"value\":\"start_recording\"}"
+                    }
+                },
+                "false" : {
+                    "publish" : {
+                        "topic" : "lintoclient/action",
+                        "message" : "{\"on\":\"%(DATE)\", \"value\":\"pause_recording\"}"
+                    }
+                }
+            }
         }
     }
 }

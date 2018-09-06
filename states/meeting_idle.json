@@ -35,7 +35,6 @@
             },
             "cancel_button": {
                 "clicked" : {
-                    "mode": "command",
                     "publish" : {
                         "topic" : "lintoclient/action",
                         "message" : "{\"on\":\"%(DATE)\", \"value\":\"stop_meeting\"}"
