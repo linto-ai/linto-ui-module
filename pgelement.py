@@ -245,6 +245,7 @@ class Animated_Switch_Button(Animated_Sprite, Clickable):
             self.curr_frame = 0
             self.image = self.frames[self.curr_frame]
         self.updating = not self.updating
+        self.event_manager.touch_input(self.id, 'true' if self.updating else 'false')
     
     def update(self):
         if self.updating:
