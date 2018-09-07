@@ -20,6 +20,11 @@
                 "any": {
                     "state": "com"
                 }
+            },
+            "lintoclient/ask": {
+                "any": {
+                    "state": "asking"
+                }
             }
         },
         "button_clicked": {
