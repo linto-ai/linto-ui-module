@@ -14,7 +14,7 @@
         "button_clicked": {
             "cancel_button": {
                 "clicked" : {
-                    "state": "idle",
+                    "state": "meeting_idle",
                     "publish" : {
                         "topic" : "ui/cancel",
                         "message" : "{\"on\":\"%(DATE)\"}"
@@ -23,7 +23,7 @@
             },
             "mute_button": {
                 "on" : {
-                    "mode": "sleeping",
+                    "mode": "meeting_sleeping",
                     "publish" : {
                         "topic" : "ui/mute_on",
                         "message" : "{\"on\":\"%(DATE)\"}"
