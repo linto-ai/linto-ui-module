@@ -315,19 +315,17 @@ class Linto_UI:
 
         Keyword arguments:
         state_name -- state name.
-        """
-        try:
-            self.states[state_name].set()
-            self.current_mode.current_state = self.states[state_name]
-        except KeyError:
-            logging.warning("Could not set state {}. Not initialized".format(state_name))
+        """    
+        self.states[state_name].set()
+        self.current_mode.current_state = self.states[state_name]
+    
 
     def set_buttons(self, buttons):
         """ Clear visible buttons and display buttons in the list 
         
         Keyword arguments:
         buttons -- a list of Buttons"""
-        self.buttons_visible.empty()
+        self.buttons_visible = pg.sprite.Group()
         self.buttons_visible.add(buttons)
 
     def spotter_status(self, status : bool):
