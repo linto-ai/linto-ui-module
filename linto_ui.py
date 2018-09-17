@@ -15,6 +15,7 @@ import pygame as pg
 import paho.mqtt.client as mqtt
 import tenacity
 import json
+from typing import Union
 
 from pgelement import *
 
@@ -435,7 +436,8 @@ class Event_Manager(threading.Thread):
         self.broker = None
     
     def _on_broker_msg(self, client, userdata, message):
-        
+        """ Solve received MQTT broker messages.
+        """
         topic = message.topic
         msg = message.payload.decode("utf-8")
         logging.debug("Received message %s on topic %s" % (msg,topic))
@@ -468,7 +470,6 @@ class Event_Manager(threading.Thread):
         if button in mode_trigger.keys() and value in mode_trigger[button].keys():
             actions = mode_trigger[button][value]
             self._resolve_action(actions)
-        
         elif button in state_trigger.keys() and value in state_trigger[button].keys():
             actions = state_trigger[button][value]
             self._resolve_action(actions)
@@ -489,9 +490,7 @@ class Event_Manager(threading.Thread):
         elif not self.connected:
             return
         for action in actions.keys():
-            if action == 'display':                 
-                self.ui.play_anim(actions["display"])
-            elif action == 'publish' and self.broker is not None:
+            if action == 'publish' and self.broker is not None: 
                 self.publish(actions["publish"]['topic'],
                                     actions["publish"]['message'])
             elif action == 'sound':
@@ -502,7 +501,7 @@ class Event_Manager(threading.Thread):
                 self.ui.set_mode(actions['mode'])
             elif action == 'state':
                 self.ui.set_state(actions['state'])
-            elif action == 'play':
+            elif action == 'play': 
                 self.ui.play_anim(self.ui.animations[actions['play']])
             elif action == 'wuw_spotting':
                 self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value"="' + self.ui.animations[actions['wuw_spotting']] + '"}')
