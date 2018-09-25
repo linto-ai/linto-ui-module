@@ -16,6 +16,7 @@ import paho.mqtt.client as mqtt
 import tenacity
 import json
 from typing import Union
+import pygame as pg
 
 from pgelement import *
 
@@ -48,7 +49,10 @@ class Mode:
         self.previous_mode = previous_mode
         if self.default_state is not None:
             self.current_state = self.default_state
-        self.current_state.set() 
+        self.current_state.set()
+
+    def __str__(self):
+        return self.id
 
 class State:
     """
@@ -190,7 +194,7 @@ class Linto_UI:
         """ Create background element such as background color, circles and ring.
         Background elements aren't modified with state changes, there are meant to remain static.
         """
-        background = pg.Surface(self.screen_size)
+        background = pg.Surface(self.screen_size, pg.HWSURFACE)
         background.fill((0,0,0))
         pg.draw.circle(background,(50,50,50),self.center_pos, self.center_pos[0], 0)
         self.background = pg.sprite.Sprite()
@@ -202,7 +206,7 @@ class Linto_UI:
         for color in ['ring_red', 'ring_blue', 'ring_green']:
             self.rings[color] = Sprite(FILE_PATH + 'sprites/' + color + '.png')
             self.rings[color].set_rect(self.screen, placeholder_man['ring'])
-        self.set_ring('ring_blue')
+        self.set_ring('ring_green')
         self.background_sprites.add(self.background)
         self.background_sprites.add(TextBox("prototype {}".format(self.config['version']),(2,2)))
         timer = TextTimer((340,2))
@@ -289,6 +293,8 @@ class Linto_UI:
         if type(animation) == str:
             animation = self.animations[animation]
         self.render_sprites = animation
+        self.render_sprites.add(MeetingTimer([100,315,280,80], "Point collab:", 121*60))
+        
         if type(animation) is Timed_Animation:
             t= threading.Thread(target = self._timed_animation_callback, args=(animation.duration,))
             t.start()
@@ -305,11 +311,8 @@ class Linto_UI:
         """
         if type(mode) == str:
             mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
-        #try:
         mode.set(self.current_mode)
         self.current_mode = mode
-        #except KeyError:
-        logging.warning("Could not set mode {}.".format(mode))
     
     def set_state(self, state_name: str):
         """ Change the current state
@@ -319,7 +322,6 @@ class Linto_UI:
         """    
         self.states[state_name].set()
         self.current_mode.current_state = self.states[state_name]
-    
 
     def set_buttons(self, buttons):
         """ Clear visible buttons and display buttons in the list 

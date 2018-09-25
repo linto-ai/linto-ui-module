@@ -273,17 +273,18 @@ def Button_Factory(manifest_path : str, target_surface : pg.Surface, event_manag
 
 
 class TextBox(pg.sprite.Sprite):
-    def __init__(self, text : str = "Text", 
-                       pos  : tuple = (0,0), 
-                       font_name : str = "Comic Sans MS",
-                       font_size : int = 30,
-                       color : tuple = (125,125,125)):
+    font_name = "Comic Sans MS"
+    font_size = 30
+    color = (125,125,125)
+    def __init__(self, text : str, 
+                       pos  : tuple = (0,0)): 
+                       
         super().__init__()
         self.text = text
         self.pos = pos
-        self.font_name = font_name
-        self.font = pg.font.SysFont(font_name, font_size)
-        self.color = color
+        self.font_name = self.font_name
+        self.font = pg.font.SysFont(self.font_name, self.font_size)
+        self.color = self.color
         self._create_surface()
         
     def _create_surface(self):
@@ -305,7 +306,6 @@ class TextBox(pg.sprite.Sprite):
     def update(self):
         pass
 
-
 class TextTimer(TextBox):
     def __init__(self, pos):
         super().__init__("00:00:00", pos)
@@ -325,3 +325,62 @@ class TextTimer(TextBox):
         remaining_time -= (hours * 3600 + minutes * 60)
         self.text = "{}{:02d}:{:02d}:{:02d}".format(sign, int(hours), int(minutes), int(remaining_time))
         self._create_surface()
+
+
+class Frame(pg.sprite.Sprite):
+    background_color = (50,50,50)
+    border_color = (0,204,255)
+    border_width = 3
+    alpha = 150
+
+    def __init__(self, rect : list, frame: bool = False):
+        super().__init__()
+        self.image = pg.Surface(rect[2:], pg.SRCALPHA|pg.HWSURFACE)
+        if frame:
+            self.image.set_alpha(0)
+            self.image.fill(self.background_color)
+            pg.draw.rect(self.image, self.border_color, pg.Rect(0,0,self.image.get_width(), self.image.get_height()), self.border_width)
+            self.image.set_alpha(self.alpha)
+        else:
+            self.image = pg.Surface.convert_alpha(self.image)
+        self.rect = pg.Rect(rect)
+
+class MessageFrame(Frame):
+    padding = 5
+    font_name = "Comic Sans MS"
+    font_size = 30
+    font_color = (255,255,255)
+    def __init__(self, rect : list, text : str):
+        super().__init__(rect)
+        self.text = text
+        self.font = pg.font.SysFont(self.font_name, self.font_size)
+        self.dist_ftop = 0
+        for line in self.text.split('\n'):
+            text_img = self.font.render(line, True, self.font_color)
+            self.image.blit(text_img, [(self.rect.width/2) - text_img.get_width()/2, self.dist_ftop + self.padding])
+            self.dist_ftop += text_img.get_height()
+
+class MeetingTimer(MessageFrame):
+    timer_font_size = 40
+    def __init__(self, rect: list, text: str, duration: int):
+        super().__init__(rect, text)
+        self.static_image = self.image.copy()
+        self.end_time = time.time() + duration
+
+    def start_timer(self, duration : "Duration in minutes"):
+        self.start_time = time.time()
+        self.end_time = self.start_time + duration * 60
+
+    def update(self):
+        remaining_time = self.end_time - time.time()
+        sign = '-' if remaining_time >= 0 else '+'
+        remaining_time = abs(remaining_time)
+        minutes = remaining_time // 60
+        hours = minutes // 60
+        minutes -= 60 * hours
+        remaining_time -= (hours * 3600 + minutes * 60)
+        text = "{}{:02d}:{:02d}:{:02d}".format(sign, int(hours), int(minutes), int(remaining_time))
+        self.font = pg.font.SysFont(self.font_name, self.timer_font_size)
+        text_img = self.font.render(text, True, self.font_color)
+        self.image = self.static_image.copy()
+        self.image.blit(text_img, [(self.rect.width/2) - text_img.get_width()/2, self.dist_ftop + self.padding])
