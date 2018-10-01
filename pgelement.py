@@ -354,6 +354,10 @@ class MessageFrame(Frame):
         super().__init__(rect)
         self.text = text
         self.font = pg.font.SysFont(self.font_name, self.font_size)
+        self._init_image()
+
+    def _init_image(self):
+        self.image = pg.Surface(self.rect[2:], pg.SRCALPHA|pg.HWSURFACE)
         self.dist_ftop = 0
         for line in self.text.split('\n'):
             text_img = self.font.render(line, True, self.font_color)
@@ -362,6 +366,8 @@ class MessageFrame(Frame):
 
 class MeetingTimer(MessageFrame):
     timer_font_size = 40
+    callback_fun = None
+    callback_times = []
     def __init__(self, rect: list, text: str, duration: int):
         super().__init__(rect, text)
         self.static_image = self.image.copy()
@@ -371,8 +377,18 @@ class MeetingTimer(MessageFrame):
         self.start_time = time.time()
         self.end_time = self.start_time + duration * 60
 
+    def set_callback(self, callback_times : list, callback_fun):
+        self.callback_times = callback_times
+        self.callback_fun = callback_fun
+
     def update(self):
         remaining_time = self.end_time - time.time()
+        if int(remaining_time) == 0:
+            self.set_timer_color((255,0,0))
+        
+        if int(remaining_time)//60 in self.callback_times:
+            self.callback_fun(int(remaining_time)//60)
+            self.callback_times.remove(int(remaining_time)//60)
         sign = '-' if remaining_time >= 0 else '+'
         remaining_time = abs(remaining_time)
         minutes = remaining_time // 60
@@ -384,3 +400,7 @@ class MeetingTimer(MessageFrame):
         text_img = self.font.render(text, True, self.font_color)
         self.image = self.static_image.copy()
         self.image.blit(text_img, [(self.rect.width/2) - text_img.get_width()/2, self.dist_ftop + self.padding])
+    
+    def set_timer_color(self, color):
+        self.font_color = color
+        self._init_image()

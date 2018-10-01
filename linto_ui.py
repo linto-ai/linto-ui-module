@@ -147,6 +147,7 @@ class Linto_UI:
         self.center_pos = [v//2 for v in self.screen_size]
             
         self.render_sprites = pg.sprite.OrderedUpdates()
+        self.overlay_sprites = pg.sprite.OrderedUpdates()
 
         #Animations
         self.animations = dict()
@@ -293,7 +294,6 @@ class Linto_UI:
         if type(animation) == str:
             animation = self.animations[animation]
         self.render_sprites = animation
-        self.render_sprites.add(MeetingTimer([100,315,280,80], "Point collab:", 121*60))
         
         if type(animation) is Timed_Animation:
             t= threading.Thread(target = self._timed_animation_callback, args=(animation.duration,))
@@ -311,6 +311,7 @@ class Linto_UI:
         """
         if type(mode) == str:
             mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
+        self.overlay_sprites = pg.sprite.OrderedUpdates()
         mode.set(self.current_mode)
         self.current_mode = mode
     
@@ -348,10 +349,12 @@ class Linto_UI:
             self.background_sprites.update()
             self.background_sprites.draw(self.screen)
             self.render_sprites.update()
+            self.overlay_sprites.update()
             if len(self.render_sprites) > 0:
                 self.render_sprites.draw(self.screen)
             self.buttons_visible.update()
             self.buttons_visible.draw(self.screen)
+            self.overlay_sprites.draw(self.screen)
             pg.display.flip()
             # Event manager
             for event in pg.event.get():
@@ -463,7 +466,30 @@ class Event_Manager(threading.Thread):
                 self._resolve_action(state_trigger[topic][value])
             elif 'any' in state_trigger[topic].keys():
                 self._resolve_action(state_trigger[topic]['any'])
+
+        #TODO Find a proper way to incorporate the following in resolve_actions
+        if 'timer' in payload.keys():
+            duration = int(payload['timer'])
+            msg = payload['title'] if 'title' in payload.keys() else ''
+            callback = int(payload['callback']) if 'callback' in payload.keys() else 0
+            self.display_timer(msg, duration=duration, callback=callback)
             
+    def display_timer(self, msg, duration=0, callback=[]):
+        timer = MeetingTimer([100,315,280,80], msg, duration*60)
+        timer.set_callback([-1,0,1], self.timer_callback)
+        self.ui.overlay_sprites = pg.sprite.OrderedUpdates()
+        self.ui.overlay_sprites.add(timer)
+        
+
+    def timer_callback(self, time_left):
+        if time_left < 0: 
+            print("Il reste {} minutes".format(time_left))
+        elif time_left == 0:
+            print("Le temps alloué est terminé")
+        else:
+            print("Le temps alloué a été dépassé de {} minutes".format(time_left))
+
+
     def touch_input(self, button, value):
         logging.debug('Touch: %s -> %s' % (button, value))
         mode_trigger = self.ui.current_mode.events['button_clicked']
@@ -491,6 +517,7 @@ class Event_Manager(threading.Thread):
                 self.connected = actions['connexion']
         elif not self.connected:
             return
+            #TODO add a map function
         for action in actions.keys():
             if action == 'publish' and self.broker is not None: 
                 self.publish(actions["publish"]['topic'],
@@ -506,6 +533,7 @@ class Event_Manager(threading.Thread):
             elif action == 'play': 
                 self.ui.play_anim(self.ui.animations[actions['play']])
             elif action == 'wuw_spotting':
+                #TODO change publish to accept dict and add date
                 self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value"="' + self.ui.animations[actions['wuw_spotting']] + '"}')
     
     def change_volume(self, value):
