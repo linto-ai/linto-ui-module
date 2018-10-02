@@ -210,10 +210,6 @@ class Linto_UI:
         self.set_ring('ring_green')
         self.background_sprites.add(self.background)
         self.background_sprites.add(TextBox("prototype {}".format(self.config['version']),(2,2)))
-        timer = TextTimer((340,2))
-        timer.start_timer(1)
-        timer.set_font_size(40)
-        self.background_sprites.add(timer)
 
     def set_ring(self, ring_color: str):
         """ Change the outlining ring color
