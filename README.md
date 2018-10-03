@@ -21,6 +21,11 @@ Python libraries required to run the module can be found within the requirements
 sudo pip3 install -r requirements.txt
 ```
 
+apt-get install python3-pygame
+pip3 install pyalsaaudio
+pip3 install paho-mqtt
+pip3 install tenacity
+
 ### HOW TO
 ## Use the module
 ```
