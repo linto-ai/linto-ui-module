@@ -250,7 +250,7 @@ class Linto_UI:
                 self.render_sprites.draw(self.linto_surface)
 
             self.buttons_visible.update()
-            self.buttons_visible.draw(self.linto_surface)
+            self.buttons_visible.draw(self.panel_surface)
             
             if self.current_offset < self.linto_offset:
                 self.current_offset += 6
