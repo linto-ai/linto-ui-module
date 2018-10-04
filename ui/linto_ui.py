@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
 # # -*- coding: utf-8 -*-
-import os, sys
-import datetime
-import threading 
-import subprocess
-import alsaaudio
-from enum import Enum
-import logging
-import time
-
 import argparse
 import configparser
-import pygame as pg
-import paho.mqtt.client as mqtt
-import tenacity
+import datetime
 import json
+import logging
+import os
+import sys
+import threading
+import time
+from enum import Enum
 from typing import Union
-import pygame as pg
 
-from components.buttons import Button_Factory
-from components.sprites import *
-from components.texts import *
+import pygame as pg
+from pygame.locals import *
+
 from components.animations import Animation, Timed_Animation
+from components.buttons import Button_Factory
+from components.eventmanager import Event_Manager
 from components.states import Mode, State
+from components.texts import DateTime, MessageFrame, TextBox
 
 FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 BACKGROUND_COLOR = (230,230,210)
@@ -92,7 +89,7 @@ class Linto_UI:
         """ Create background element such as background color"""
         self.background = pg.Surface(self.screen_size, pg.HWSURFACE)
         self.background.fill(BACKGROUND_COLOR)
-    
+
     def init_linto_surface(self):
         """ Linto """
         self.linto_size = [min(self.screen_size)]*2
@@ -102,8 +99,14 @@ class Linto_UI:
         self.panel_size = [self.screen_size[0]-self.linto_size[0], self.screen_size[1]]
         self.panel_surface = pg.Surface(self.panel_size, pg.HWSURFACE)
         self.panel_surface.fill((150,150,150))
-        pg.draw.line(self.panel_surface, (5,5,50), [0,100], [self.panel_size[0],100], 2)
-        pg.draw.line(self.panel_surface, (5,5,50), [0,0], [0,self.panel_size[1]], 2)
+        #test = MessageFrame([0,0, self.panel_size[0]-20, 100], "10h -> 12h\nRéunion hebdomadaire\nDurée: 1h\nOrganisateur: J.P Lorré")
+        #self.panel_surface.blit(test.image, [10,100])
+        pg.draw.line(self.panel_surface, (0,0,0), [0,100],[self.panel_size[1],100])
+        y_step = (self.panel_size[1] - 120) // 18
+        for y in range(18):
+            curr_y = y_step * y + 120
+            pg.draw.line(self.panel_surface, (50,50,50), [30,curr_y],[self.panel_size[1],curr_y])
+            self.panel_surface.blit(TextBox("{:02}:00".format(y+6)).image, [5,curr_y - y_step + 5])
         
     def load_animations(self, folder: 'animation folder'):
         """Load all the .json file in a specified folder as animations.
@@ -161,6 +164,7 @@ class Linto_UI:
         for file_name in os.listdir(FILE_PATH + folder):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
+                #button = Button_Factory(file_path, self.linto_surface, self.event_manager)
                 button = Button_Factory(file_path, self.linto_surface, self.event_manager)
                 self.buttons[button.id] = button
 
@@ -264,7 +268,8 @@ class Linto_UI:
             
             self.overlay_sprites.draw(self.screen)
             pg.display.flip()
-            # Event manager
+
+            # Touch screen event manager
             for event in pg.event.get():
                 if event.type in [pg.MOUSEBUTTONUP]:
                     mouse_sprite.rect = pg.Rect( event.pos[0] - self.linto_offset -1, event.pos[1]-1, 2,2)
@@ -281,192 +286,8 @@ class Linto_UI:
                     self.hide_side_panel()
             clock.tick(FPS)
 
-class Event_Manager(threading.Thread):
-    """
-    Event manager deal with the input from the MQTT broker and the touchscreen inputs.
-    It matchs each input with the responses defined for the current mode or states.
-    """
-    def __init__(self, ui: Linto_UI, config):
-        threading.Thread.__init__(self)
-        self.config = config
-        self.ui = ui
-        self.alive = True
-        self.connected = True
-        self.broker = None
 
-        #Audio init
-        mixer = alsaaudio.Mixer()
-        mixer.setvolume(60)
-
-    @tenacity.retry(wait=tenacity.wait_fixed(5),
-            stop=tenacity.stop_after_attempt(24),
-            retry=tenacity.retry_if_result(lambda s: s is None),
-            retry_error_callback=(lambda s: s.result())
-            )
-    def broker_connect(self):
-        logging.info("Attempting connexion to broker at %s:%i" % (config['broker_ip'], int(config['broker_port'])))
-        try:
-            broker = mqtt.Client()
-            broker.on_connect = self._on_broker_connect
-            broker.connect(config['broker_ip'], int(config['broker_port']), 0)
-            broker.on_disconnect = self._on_broker_disconnect
-            broker.on_message = self._on_broker_msg
-            return broker
-        except:
-            logging.warning("Failed to connect to broker (Retrying after 5s)")
-            self.ui.play_anim('error')
-            return None
-    
-    def end(self):
-        self.alive = False
-        self.broker.disconnect()
-        
-    def _on_broker_connect(self, client, userdata, flags, rc):
-        """ Function called when the Mqtt client connects to the broker.
-        It looks for every broker_message event within the modes and states json files and
-        subscribe to the relevant topics.
-        """
-        logging.info("Connected to broker")
-        topics = set() # Set of topics: Prevents duplicate
-        files = [] # List of json files
-
-        for file_name in [file_name for file_name in os.listdir(FILE_PATH + 'modes') if file_name.endswith('.json')]: 
-            file_path = os.path.join(FILE_PATH, 'modes', file_name)
-            files.append(file_path)
-
-        for file_name in [file_name for file_name in os.listdir(FILE_PATH + 'states') if file_name.endswith('.json')]: 
-            file_path = os.path.join(FILE_PATH, 'states', file_name)
-            files.append(file_path)
-        for file_path in files:
-            with open(file_path, 'r') as f:
-                manifest = json.load(f)
-                for topic_name in manifest['events']['broker_message']:
-                    topics.add(topic_name)
-        for topic in topics:
-            self.broker.subscribe(topic)
-            logging.debug("Subscribed to {}".format(topic))
-    
-    def _on_broker_disconnect(self, client, userdata, rc):
-        logging.debug("Disconnection")
-        if self.broker is not None:
-            self.broker.disconnect()
-        self.broker = None
-    
-    def _on_broker_msg(self, client, userdata, message):
-        """ Solve received MQTT broker messages.
-        """
-        topic = message.topic
-        msg = message.payload.decode("utf-8")
-        logging.debug("Received message %s on topic %s" % (msg,topic))
-        value = None
-        try:
-            payload = json.loads(msg)
-            if 'value' in payload.keys():
-                value = payload['value']
-        except:
-            logging.warning('Could not load json from message.')        
-        mode_trigger = self.ui.current_mode.events['broker_message']
-        state_trigger = self.ui.current_mode.current_state.events['broker_message']
-
-        if topic in mode_trigger.keys():
-            if value in mode_trigger[topic].keys():
-                self._resolve_action(mode_trigger[topic][value])
-            elif 'any' in mode_trigger[topic].keys():
-                self._resolve_action(mode_trigger[topic]['any'])
-        elif topic in state_trigger.keys():
-            if value in state_trigger[topic].keys():
-                self._resolve_action(state_trigger[topic][value])
-            elif 'any' in state_trigger[topic].keys():
-                self._resolve_action(state_trigger[topic]['any'])
-
-        #TODO Find a proper way to incorporate the following in resolve_actions
-        if 'timer' in payload.keys():
-            duration = int(payload['timer'])
-            msg = payload['title'] if 'title' in payload.keys() else ''
-            callback = int(payload['callback']) if 'callback' in payload.keys() else 0
-            self.display_timer(msg, duration=duration, callback=callback)
-            
-    def display_timer(self, msg, duration=0, callback=[]):
-        timer = MeetingTimer([100,315,280,80], msg, duration*60)
-        timer.set_callback([-1,0,1], self.timer_callback)
-        self.ui.overlay_sprites = pg.sprite.OrderedUpdates()
-        self.ui.overlay_sprites.add(timer)
-        
-
-    def timer_callback(self, time_left):
-        if time_left < 0: 
-            print("Il reste {} minutes".format(time_left))
-        elif time_left == 0:
-            print("Le temps alloué est terminé")
-        else:
-            print("Le temps alloué a été dépassé de {} minutes".format(time_left))
-
-
-    def touch_input(self, button, value):
-        logging.debug('Touch: %s -> %s' % (button, value))
-        mode_trigger = self.ui.current_mode.events['button_clicked']
-        state_trigger = self.ui.current_mode.current_state.events['button_clicked']
-        
-        if button in mode_trigger.keys() and value in mode_trigger[button].keys():
-            actions = mode_trigger[button][value]
-            self._resolve_action(actions)
-        elif button in state_trigger.keys() and value in state_trigger[button].keys():
-            actions = state_trigger[button][value]
-            self._resolve_action(actions)
-        
-    def publish(self, topic, msg):
-        # Format message looking for tokens
-        if self.broker is not None:
-            payload = msg.replace("%(DATE)", datetime.datetime.now().isoformat())
-            
-            logging.debug("Publishing msg %s on topic %s" % (payload, topic))
-            self.broker.publish(topic, payload)
-
-    def _resolve_action(self, actions):
-        if 'ring' in actions.keys():
-                self.ui.set_ring(actions['ring'])
-        if 'connexion' in actions.keys():
-                self.connected = actions['connexion']
-        elif not self.connected:
-            return
-            #TODO add a map function
-        for action in actions.keys():
-            if action == 'publish' and self.broker is not None: 
-                self.publish(actions["publish"]['topic'],
-                                    actions["publish"]['message'])
-            elif action == 'sound':
-                self.play_sound(actions["sound"])
-            elif action == 'volume':
-                self.change_volume(actions['volume'])
-            elif action == 'mode':
-                self.ui.set_mode(actions['mode'])
-            elif action == 'state':
-                self.ui.set_state(actions['state'])
-            elif action == 'play': 
-                self.ui.play_anim(self.ui.animations[actions['play']])
-            elif action == 'wuw_spotting':
-                #TODO change publish to accept dict and add date
-                self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value"="' + self.ui.animations[actions['wuw_spotting']] + '"}')
-    
-    def change_volume(self, value):
-        mixer = alsaaudio.Mixer()
-        mixer.setvolume(value)
-
-    def play_sound(self, name):
-        logging.debug("playing sound")
-        file_path = os.path.dirname(os.path.abspath(__file__)) + '/sounds/'+ name +'.wav'
-        subprocess.Popen(['aplay', file_path])
-
-    def run(self):
-        while self.alive:
-            self.broker = self.broker_connect()
-            self.broker.loop_forever(retry_first_connection=True)
-
-def main(args, config):
-    ui = Linto_UI(args, config)
-    ui.run()
-
-if __name__ == '__main__':
+def main():
     config = configparser.ConfigParser()
     config.read(FILE_PATH + "config.conf")
     config = config['CONFIG']
@@ -475,4 +296,9 @@ if __name__ == '__main__':
     parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[480,480], help="Screen resolution")
     parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
     args = parser.parse_args()
-    main(args, config)
+
+    ui = Linto_UI(args, config)
+    ui.run()
+
+if __name__ == '__main__':
+    main()

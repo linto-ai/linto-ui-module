@@ -4,7 +4,7 @@ import datetime
 
 class TextBox(pg.sprite.Sprite):
     font_name = "Comic Sans MS"
-    font_size = 30
+    font_size = 25
     color = (125,125,125)
     def __init__(self, text : str, 
                        pos  : tuple = (0,0)): 
@@ -65,14 +65,13 @@ class DateTime(TextBox):
         self.set_text(datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
 
 
-
 class Frame(pg.sprite.Sprite):
     background_color = (50,50,50)
     border_color = (0,204,255)
     border_width = 3
     alpha = 150
 
-    def __init__(self, rect : list, frame: bool = False):
+    def __init__(self, rect : list, frame: bool = True):
         super().__init__()
         self.image = pg.Surface(rect[2:], pg.SRCALPHA|pg.HWSURFACE)
         if frame:
