@@ -3,6 +3,6 @@
         "type" : "animated_switch",
         "nb_frames" : 2,
         "frame_duration" : 30,
-        "frame_width" : 256, 
+        "frame_width" : 100, 
         "rect" : [0.5,0.075,0.1,0.1]
 }

@@ -1,7 +1,0 @@
-{
-        "name" : "mute_button",
-        "type" : "switch",
-        "nb_frames" : 2,
-        "frame_width" : 420,
-        "rect" : [0.075,0.5,0.1,0.1]
-}
