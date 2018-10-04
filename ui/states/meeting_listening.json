@@ -1,0 +1,37 @@
+{
+    "state_name" : "meeting_listening", 
+    "animation" : "meeting_listening",
+    "buttons" : ["mute_button", "volume_button", "cancel_button", "recording_button"],
+    "wuw_spotting" : false,
+    "events" : {
+        "broker_message": {
+            "utterance/stop" :{
+                "any":{
+                    "state": "meeting_idle",
+                    "sound": "beep2"
+                }
+            }
+        },
+        "button_clicked": {
+            "cancel_button": {
+                "clicked" : {
+                    "state": "meeting_idle",
+                    "sound": "beep4",
+                    "publish" : {
+                        "topic" : "ui/cancel",
+                        "message" : "{\"on\":\"%(DATE)\"}"
+                    }
+                }
+            },
+            "mute_button": {
+                "on" : {
+                    "mode": "meeting_sleeping",
+                    "publish" : {
+                        "topic" : "ui/mute_on",
+                        "message" : "{\"on\":\"%(DATE)\"}"
+                    }
+                }
+            }           
+        }
+    }
+}

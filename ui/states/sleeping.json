@@ -1,0 +1,14 @@
+{
+    "state_name" : "sleeping", 
+    "animation" : "sleeping",
+    "buttons" : ["empty_button", "mute_button", "volume_button"],
+    "wuw_spotting" : false,
+    "events" : {
+        "broker_message": {
+            
+        },
+        "button_clicked": {
+            
+        }
+    }
+}

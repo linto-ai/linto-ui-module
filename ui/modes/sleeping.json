@@ -1,0 +1,25 @@
+{
+    "mode_name" : "sleeping", 
+    "default_state" : "sleeping",
+    "events" : {
+        "broker_message": {
+            "lintoclient/disconnected" : {
+                "any": {
+                    "mode" : "disconnected",
+                    "ring" : "ring_red"
+                }
+            }
+        },
+        "button_clicked": {
+            "mute_button":{
+                "false" : {
+                    "mode": "command",
+                    "publish": {
+                        "topic" : "ui/mute_off",
+                        "message" : "{\"on\":\"%(DATE)\"}"
+                    }
+                }
+            }
+        }
+    }
+}

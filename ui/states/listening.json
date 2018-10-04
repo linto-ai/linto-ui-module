@@ -1,0 +1,37 @@
+{
+    "state_name" : "listening", 
+    "animation" : "listening",
+    "buttons" : ["empty_button", "mute_button", "volume_button", "cancel_button"],
+    "wuw_spotting" : false,
+    "events" : {
+        "broker_message": {
+            "utterance/stop" :{
+                "any":{
+                    "state": "idle",
+                    "sound": "beep2"
+                }
+            }
+        },
+        "button_clicked": {
+            "cancel_button": {
+                "clicked" : {
+                    "state": "idle",
+                    "sound": "beep4",
+                    "publish" : {
+                        "topic" : "ui/cancel",
+                        "message" : "{\"on\":\"%(DATE)\"}"
+                    }
+                }
+            },
+            "mute_button": {
+                "on" : {
+                    "mode": "sleeping",
+                    "publish" : {
+                        "topic" : "ui/mute_on",
+                        "message" : "{\"on\":\"%(DATE)\"}"
+                    }
+                }
+            }           
+        }
+    }
+}

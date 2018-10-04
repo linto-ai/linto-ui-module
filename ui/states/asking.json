@@ -1,0 +1,22 @@
+{
+    "state_name" : "asking", 
+    "animation" : "asking_speaking",
+    "buttons" : ["empty_button"],
+    "wuw_spotting" : false,
+    "events" : {
+        "broker_message": {
+            "tts/speaking/stop" :{
+                "any":{
+                    "state": "answering",
+                    "publish": {
+                        "topic": "vad_spotter",
+                        "message": "{\"on\":\"%(DATE)\", \"value\":\"detect_utterance\"}"
+                    }
+                }
+            }
+        },
+        "button_clicked": {
+                     
+        }
+    }
+}

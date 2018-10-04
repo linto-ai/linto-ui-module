@@ -1,0 +1,8 @@
+{
+        "name" : "volume_button",
+        "type" : "state",
+        "nb_frames" : 4,
+        "frame_width" : 220, 
+        "state_values" : ["full", "mid", "low", "silenced"], 
+        "rect" : [0.875,0.875,0.15,0.15]
+}

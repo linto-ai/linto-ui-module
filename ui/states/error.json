@@ -1,0 +1,14 @@
+{
+    "state_name" : "error", 
+    "animation" : "error",
+    "buttons" : [],
+    "wuw_spotting" : false,
+    "events" : {
+        "broker_message": {
+            
+        },
+        "button_clicked": {
+                     
+        }
+    }
+}

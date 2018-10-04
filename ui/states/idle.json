@@ -1,0 +1,38 @@
+{
+    "state_name" : "idle", 
+    "animation" : "idle",
+    "buttons" : ["volume_button", "mute_button", "empty_button"],
+    "wuw_spotting" : true,
+    "events" : {
+        "broker_message": {
+            "utterance/start": {
+                "any":{
+                    "state" : "listening",
+                    "sound" : "beep1"
+                }
+            },
+            "tts/speaking/start": {
+                "any": {
+                    "state": "speaking"
+                }
+            },
+            "lintoclient/request/send": {
+                "any": {
+                    "state": "com"
+                }
+            },
+            "lintoclient/ask": {
+                "any": {
+                    "state": "asking"
+                }
+            }
+        },
+        "button_clicked": {
+            "empty_button": {
+                "clicked": {
+                    "play": "happy"
+                }
+            }
+        }
+    }
+}

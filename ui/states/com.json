@@ -1,0 +1,18 @@
+{
+    "state_name" : "com", 
+    "animation" : "com",
+    "buttons" : ["empty_button"],
+    "wuw_spotting" : false,
+    "events" : {
+        "broker_message": {
+            "tts/speaking/start" :{
+                "any":{
+                    "state": "speaking"
+                }
+            }
+        },
+        "button_clicked": {
+                     
+        }
+    }
+}

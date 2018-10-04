@@ -1,0 +1,18 @@
+{
+    "state_name" : "answering", 
+    "animation" : "asking_listening",
+    "buttons" : [],
+    "wuw_spotting" : false,
+    "events" : {
+        "broker_message": {
+            "utterance/stop" :{
+                "any":{
+                    "state": "com"
+                }
+            }
+        },
+        "button_clicked": {
+                     
+        }
+    }
+}
