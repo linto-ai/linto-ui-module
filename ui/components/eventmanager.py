@@ -95,6 +95,7 @@ class Event_Manager(threading.Thread):
             if 'value' in payload.keys():
                 value = payload['value']
         except:
+            payload = msg
             logging.warning('Could not load json from message.')        
         mode_trigger = self.ui.current_mode.events['broker_message']
         state_trigger = self.ui.current_mode.current_state.events['broker_message']
@@ -172,7 +173,7 @@ class Event_Manager(threading.Thread):
 
     def play_sound(self, name):
         logging.debug("playing sound")
-        file_path = os.path.dirname(os.path.abspath(__file__)) + '/sounds/'+ name +'.wav'
+        file_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/sounds/'+ name +'.wav'
         subprocess.Popen(['aplay', file_path])
 
     def run(self):
