@@ -1,0 +1,8 @@
+include ui/config.conf
+include ui/placeholders.json
+recursive-include ui/animations/ *
+recursive-include ui/buttons/ *
+recursive-include ui/modes/ *
+recursive-include ui/sounds/ *
+recursive-include ui/sprites/ *
+recursive-include ui/states/ *
