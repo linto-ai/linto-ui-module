@@ -15,13 +15,13 @@ from typing import Union
 import pygame as pg
 from pygame.locals import *
 
-from components.animations import Animation, Timed_Animation
-from components.buttons import Button_Factory
-from components.eventmanager import Event_Manager
-from components.states import Mode, State
-from components.texts import DateTime, MessageFrame, TextBox
+from ui.components.animations import Animation, Timed_Animation
+from ui.components.buttons import Button_Factory
+from ui.components.eventmanager import Event_Manager
+from ui.components.states import Mode, State
+from ui.components.texts import DateTime, MessageFrame, TextBox, MeetingTimer
 
-FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
+FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 BACKGROUND_COLOR = (230,230,210)
 FPS = 30
 
@@ -53,6 +53,7 @@ class Linto_UI:
         #Buttons
         self.buttons = pg.sprite.Group()
         self.buttons_visible = pg.sprite.Group()
+        self.buttons_panel = pg.sprite.Group()
         self.load_buttons()
         
         #States
@@ -83,7 +84,7 @@ class Linto_UI:
         self.display_width = display.current_w
         self.display_height = display.current_h
         print(self.display_width, self.display_height)
-        return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
+        return pg.display.set_mode(resolution,FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
 
     def init_background(self):
         """ Create background element such as background color"""
@@ -99,14 +100,23 @@ class Linto_UI:
         self.panel_size = [self.screen_size[0]-self.linto_size[0], self.screen_size[1]]
         self.panel_surface = pg.Surface(self.panel_size, pg.HWSURFACE)
         self.panel_surface.fill((150,150,150))
-        #test = MessageFrame([0,0, self.panel_size[0]-20, 100], "10h -> 12h\nRéunion hebdomadaire\nDurée: 1h\nOrganisateur: J.P Lorré")
-        #self.panel_surface.blit(test.image, [10,100])
-        pg.draw.line(self.panel_surface, (0,0,0), [0,100],[self.panel_size[1],100])
-        y_step = (self.panel_size[1] - 120) // 18
-        for y in range(18):
-            curr_y = y_step * y + 120
-            pg.draw.line(self.panel_surface, (50,50,50), [30,curr_y],[self.panel_size[1],curr_y])
-            self.panel_surface.blit(TextBox("{:02}:00".format(y+6)).image, [5,curr_y - y_step + 5])
+        title = MessageFrame([0,0, self.panel_size[0]-20, 100], "Réunion hebdomadaire")
+        self.panel_surface.blit(title.image, [10,20])
+
+        abstract = MessageFrame([0,0, self.panel_size[0]-20, 100], "Objet: Réunion d'avancement\nde l'équipe R&D")
+        self.panel_surface.blit(abstract.image, [10,55])
+
+        responsable = MessageFrame([0,0, self.panel_size[0]-20, 100], "Organisateur: J.P Lorré")
+        self.panel_surface.blit(responsable.image, [10,125])
+
+        duration = MessageFrame([0,0, self.panel_size[0]-20, 100], "Durée: 2h")
+        self.panel_surface.blit(duration.image, [10,160])
+
+        remaining_time = MeetingTimer([0,0,self.panel_size[0], 50], "Temps restants: ", 60)
+        self.panel_surface.blit(remaining_time.image, [10,195])
+
+        participants = MessageFrame([0,0, self.panel_size[0]-20, 150], "Participants:\n- {}".format("\n- ".join(['Jean-Pierre Lorré', 'Damien Lainé', 'Sonia Badène', 'Vladimir Poutine', 'Sami Naceri'])))
+        self.panel_surface.blit(participants.image, [10,230])
         
     def load_animations(self, folder: 'animation folder'):
         """Load all the .json file in a specified folder as animations.
@@ -116,7 +126,7 @@ class Linto_UI:
         """
         self.animations = dict()
         logging.debug("Loading animations")
-        for file_name in os.listdir(FILE_PATH + folder):
+        for file_name in os.listdir(os.path.join(FILE_PATH, folder)):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith(".json"):
                 with open(file_path, 'r') as f:
@@ -133,7 +143,7 @@ class Linto_UI:
         Keyword arguments:
         folder -- An absolute path to a folder containing .json state manifests
         """
-        for file_name in os.listdir(FILE_PATH + folder):
+        for file_name in os.listdir(os.path.join(FILE_PATH,folder)):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
                 with open(file_path) as f:
@@ -146,7 +156,7 @@ class Linto_UI:
         Keyword arguments:
         folder -- An absolute path to a folder containing .json mode manifests
         """
-        for file_name in os.listdir(FILE_PATH + folder):
+        for file_name in os.listdir(os.path.join(FILE_PATH, folder)):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
                 with open(file_path) as f:
@@ -161,7 +171,7 @@ class Linto_UI:
         """
         self.buttons = dict()
         logging.debug("Loading Buttons")
-        for file_name in os.listdir(FILE_PATH + folder):
+        for file_name in os.listdir(os.path.join(FILE_PATH,folder)):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
                 #button = Button_Factory(file_path, self.linto_surface, self.event_manager)
@@ -286,14 +296,13 @@ class Linto_UI:
                     self.hide_side_panel()
             clock.tick(FPS)
 
-
 def main():
     config = configparser.ConfigParser()
-    config.read(FILE_PATH + "config.conf")
+    config.read(os.path.join(FILE_PATH,"config.conf"))
     config = config['CONFIG']
     logging.basicConfig(level=logging.DEBUG if config['debug'] == 'true' else logging.INFO, format="%(levelname)8s %(asctime)s %(message)s ")
     parser = argparse.ArgumentParser(description='GUI interface for the LinTo device')
-    parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[480,480], help="Screen resolution")
+    parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[800,480], help="Screen resolution")
     parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
     args = parser.parse_args()
 
