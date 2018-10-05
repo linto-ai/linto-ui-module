@@ -1,6 +1,6 @@
 import logging
 
-from components.buttons import Button_Factory
+from ui.components.buttons import Button_Factory
 
 
 class Mode:

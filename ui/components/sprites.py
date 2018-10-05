@@ -102,7 +102,7 @@ class Animated_Sprite(Sprite):
 
         """
         super().__init__(sprite_path)
-        self._read_manifest(sprite_path.split('.')[0] + '.json')
+        self._read_manifest(".".join(sprite_path.split('.')[:-1]) + '.json')
         self.frame_counter = 0
         self.curr_frame = 0
 

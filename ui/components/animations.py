@@ -1,9 +1,10 @@
+import os
 import logging
 import json
 
 import pygame as pg
-from components.sprites import SpriteFactory
-from components import ROOT_PATH
+from ui.components.sprites import SpriteFactory
+from ui.components import ROOT_PATH
 
 
 class Animation(pg.sprite.OrderedUpdates):
@@ -14,16 +15,16 @@ class Animation(pg.sprite.OrderedUpdates):
         self.duration = None
         self.manifest = manifest
         self.load_manifest()
-        
     def load_manifest(self):
+        print("ICI2", os.path.join(ROOT_PATH, "placeholders.json"))
         try:
-            placeholder_man = json.load(open(ROOT_PATH + "placeholders.json", 'r'))
+            placeholder_man = json.load(open(os.path.join(ROOT_PATH, "placeholders.json"), 'r'))
             draw_order = placeholder_man["draw_order"]
             placeholder_man = placeholder_man['placeholders']
             self.id = self.manifest['id']
             logging.debug("Loading %s animation" % self.id)
         except FileNotFoundError:
-            logging.warning("Could not load placeholder manifest file")
+            logging.error("Could not load placeholder manifest file")
             return
 
         # Check or create sprites for each placeholder
@@ -36,7 +37,7 @@ class Animation(pg.sprite.OrderedUpdates):
                 continue
             sprite_name = sprite_info['sprite_name']
             #logging.debug("Adding sprite {}".format(sprite_name))
-            self.add(SpriteFactory(ROOT_PATH + "sprites/" + sprite_name, sprite_mode, self.screen, placeholder_man[sprite_ph]))
+            self.add(SpriteFactory(os.path.join(ROOT_PATH, "sprites", sprite_name), sprite_mode, self.screen, placeholder_man[sprite_ph]))
 
     def __str__(self):
         return "<Animation: {} ({})>".format(self.id, self.sprites)

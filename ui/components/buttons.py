@@ -1,7 +1,7 @@
 import pygame as pg
 import json
 
-from components.sprites import Sprite, Animated_Sprite
+from ui.components.sprites import Sprite, Animated_Sprite
 
 class Clickable:
     def __init__(self, manifest_path : str, event_manager: "Event Manager class"):
@@ -80,7 +80,7 @@ def Button_Factory(manifest_path : str, target_surface : pg.Surface, event_manag
     with open(manifest_path, 'r') as f:
         manifest = json.load(f)
         button_type = manifest['type']
-        sprite_path = manifest_path.split('.')[0] + ".png"
+        sprite_path = ".".join(manifest_path.split('.')[:-1]) + ".png"
         if button_type == 'single':
             button =  SimpleButton(sprite_path,manifest_path, event_manager)
         elif button_type == 'state':

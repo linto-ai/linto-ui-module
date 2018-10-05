@@ -10,7 +10,7 @@ import pygame as pg
 import paho.mqtt.client as mqtt
 import tenacity
 
-from components import ROOT_PATH
+from ui.components import ROOT_PATH
 
 class Event_Manager(threading.Thread):
     """
@@ -101,27 +101,14 @@ class Event_Manager(threading.Thread):
 
         if topic in mode_trigger.keys():
             if value in mode_trigger[topic].keys():
-                self._resolve_action(mode_trigger[topic][value])
+                self._resolve_action(mode_trigger[topic][value], payload)
             elif 'any' in mode_trigger[topic].keys():
-                self._resolve_action(mode_trigger[topic]['any'])
+                self._resolve_action(mode_trigger[topic]['any'], payload)
         elif topic in state_trigger.keys():
             if value in state_trigger[topic].keys():
-                self._resolve_action(state_trigger[topic][value])
+                self._resolve_action(state_trigger[topic][value], payload)
             elif 'any' in state_trigger[topic].keys():
-                self._resolve_action(state_trigger[topic]['any'])
-
-        #TODO Find a proper way to incorporate the following in resolve_actions
-        if 'timer' in payload.keys():
-            duration = int(payload['timer'])
-            msg = payload['title'] if 'title' in payload.keys() else ''
-            callback = int(payload['callback']) if 'callback' in payload.keys() else 0
-            self.display_timer(msg, duration=duration, callback=callback)
-            
-    def display_timer(self, msg, duration=0, callback=[]):
-        timer = MeetingTimer([100,315,280,80], msg, duration*60)
-        timer.set_callback([-1,0,1], self.timer_callback)
-        self.ui.overlay_sprites = pg.sprite.OrderedUpdates()
-        self.ui.overlay_sprites.add(timer)
+                self._resolve_action(state_trigger[topic]['any'], payload)
         
 
     def timer_callback(self, time_left):
@@ -153,7 +140,7 @@ class Event_Manager(threading.Thread):
             logging.debug("Publishing msg %s on topic %s" % (payload, topic))
             self.broker.publish(topic, payload)
 
-    def _resolve_action(self, actions):
+    def _resolve_action(self, actions, payload = dict()):
         if 'ring' in actions.keys():
                 self.ui.set_ring(actions['ring'])
         if 'connexion' in actions.keys():

@@ -88,8 +88,9 @@ class MessageFrame(Frame):
     font_name = "Comic Sans MS"
     font_size = 30
     font_color = (255,255,255)
-    def __init__(self, rect : list, text : str):
+    def __init__(self, rect : list, text : str, center=False):
         super().__init__(rect)
+        self.centered = center
         self.text = text
         self.font = pg.font.SysFont(self.font_name, self.font_size)
         self._init_image()
@@ -99,7 +100,7 @@ class MessageFrame(Frame):
         self.dist_ftop = 0
         for line in self.text.split('\n'):
             text_img = self.font.render(line, True, self.font_color)
-            self.image.blit(text_img, [(self.rect.width/2) - text_img.get_width()/2, self.dist_ftop + self.padding])
+            self.image.blit(text_img, [(self.rect.width/2) - text_img.get_width()/2 if self.centered else self.padding , self.dist_ftop + self.padding])
             self.dist_ftop += text_img.get_height()
 
 class MeetingTimer(MessageFrame):
