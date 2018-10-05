@@ -96,7 +96,7 @@ class MessageFrame(Frame):
         self._init_image()
 
     def _init_image(self):
-        self.image = pg.Surface(self.rect[2:], pg.SRCALPHA|pg.HWSURFACE)
+        self.image = pg.Surface([self.rect.width, self.rect.height], pg.SRCALPHA|pg.HWSURFACE)
         self.dist_ftop = 0
         for line in self.text.split('\n'):
             text_img = self.font.render(line, True, self.font_color)
