@@ -234,7 +234,7 @@ class Linto_UI:
             if not intersect:
                 rects.append(sprite.rect)
         for rect in rects:
-            self.screen.blit(self.background, rect[:2], area=rect)
+            self.screen.blit(self.background, [rect[0], rect[1]], area=rect)
 
     def draw_sprites(self):
         """Draw all visible sprites and return rect of changed areas"""
