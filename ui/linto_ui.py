@@ -78,7 +78,7 @@ class Linto_UI:
         pg.display.init()
         pg.font.init()
         if not self.config['debug'] == 'true':
-            pg.mouse.set_visible(False)
+            pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
         display = pg.display.Info()
         self.display_width = display.current_w
         self.display_height = display.current_h 
