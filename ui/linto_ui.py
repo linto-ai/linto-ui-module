@@ -32,16 +32,16 @@ class Linto_UI:
         # Init display
         self.screen_size = args.resolution
         self.screen = self.init_gui(self.screen_size, args.fullscreen)
+        self.background = pg.Surface(self.screen_size, flags=pg.HWSURFACE)
+        self.background.fill(BACKGROUND_COLOR)
+        self.screen.blit(self.background, [0,0])
+        pg.display.update()
         self.center_pos = [v//2 for v in self.screen_size]
             
         self.render_sprites = pg.sprite.OrderedUpdates()
         self.overlay_sprites = pg.sprite.OrderedUpdates()
         self.overlay_sprites.add(DateTime([10,10]))
-
-        #Backgrounds
-        self.init_background()
-        self.init_linto_surface()
-        self.init_side_panel()
+        self.updated_rects = []
 
         #Animations
         self.animations = dict()
@@ -52,8 +52,7 @@ class Linto_UI:
 
         #Buttons
         self.buttons = pg.sprite.Group()
-        self.buttons_visible = pg.sprite.Group()
-        self.buttons_panel = pg.sprite.Group()
+        self.buttons_visible = pg.sprite.OrderedUpdates()
         self.load_buttons()
         
         #States
@@ -79,44 +78,12 @@ class Linto_UI:
         pg.display.init()
         pg.font.init()
         if not self.config['debug'] == 'true':
-            pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0)) # set the cursor invisible
+            pg.mouse.set_visible(False)
         display = pg.display.Info()
         self.display_width = display.current_w
-        self.display_height = display.current_h
-        print(self.display_width, self.display_height)
-        return pg.display.set_mode(resolution,FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME)
-
-    def init_background(self):
-        """ Create background element such as background color"""
-        self.background = pg.Surface(self.screen_size, pg.HWSURFACE)
-        self.background.fill(BACKGROUND_COLOR)
-
-    def init_linto_surface(self):
-        """ Linto """
-        self.linto_size = [min(self.screen_size)]*2
-        self.linto_surface = pg.Surface(self.linto_size, pg.HWSURFACE)
-
-    def init_side_panel(self):
-        self.panel_size = [self.screen_size[0]-self.linto_size[0], self.screen_size[1]]
-        self.panel_surface = pg.Surface(self.panel_size, pg.HWSURFACE)
-        self.panel_surface.fill((150,150,150))
-        title = MessageFrame([0,0, self.panel_size[0]-20, 100], "Réunion hebdomadaire")
-        self.panel_surface.blit(title.image, [10,20])
-
-        abstract = MessageFrame([0,0, self.panel_size[0]-20, 100], "Objet: Réunion d'avancement\nde l'équipe R&D")
-        self.panel_surface.blit(abstract.image, [10,55])
-
-        responsable = MessageFrame([0,0, self.panel_size[0]-20, 100], "Organisateur: J.P Lorré")
-        self.panel_surface.blit(responsable.image, [10,125])
-
-        duration = MessageFrame([0,0, self.panel_size[0]-20, 100], "Durée: 2h")
-        self.panel_surface.blit(duration.image, [10,160])
-
-        remaining_time = MeetingTimer([0,0,self.panel_size[0], 50], "Temps restants: ", 60)
-        self.panel_surface.blit(remaining_time.image, [10,195])
-
-        participants = MessageFrame([0,0, self.panel_size[0]-20, 150], "Participants:\n- {}".format("\n- ".join(['Jean-Pierre Lorré', 'Damien Lainé', 'Sonia Badène', 'Vladimir Poutine', 'Sami Naceri'])))
-        self.panel_surface.blit(participants.image, [10,230])
+        self.display_height = display.current_h 
+        logging.debug("Using resolution ({},{})".format(self.display_width, self.display_height))
+        return pg.display.set_mode(resolution,pg.FULLSCREEN|pg.HWSURFACE if fullscreen else pg.NOFRAME|pg.HWACCEL)
         
     def load_animations(self, folder: 'animation folder'):
         """Load all the .json file in a specified folder as animations.
@@ -132,9 +99,9 @@ class Linto_UI:
                 with open(file_path, 'r') as f:
                     manifest = json.load(f)
                     if manifest['type'] in ['timed']:
-                        anim = Timed_Animation(self.linto_surface, manifest, self.render_sprites)
+                        anim = Timed_Animation(self.screen, manifest, self.render_sprites)
                     else:
-                        anim = Animation(self.linto_surface, manifest, self.render_sprites)
+                        anim = Animation(self.screen, manifest, self.render_sprites)
                     self.animations[anim.id] = anim
     
     def load_states(self, folder : str='states'):
@@ -174,8 +141,8 @@ class Linto_UI:
         for file_name in os.listdir(os.path.join(FILE_PATH,folder)):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
-                #button = Button_Factory(file_path, self.linto_surface, self.event_manager)
-                button = Button_Factory(file_path, self.linto_surface, self.event_manager)
+                print(file_path)
+                button = Button_Factory(file_path, self.screen, self.event_manager)
                 self.buttons[button.id] = button
 
     def play_anim(self, animation : Union[Animation, str]):
@@ -184,8 +151,10 @@ class Linto_UI:
         Keyword arguments:
         animation -- Either an animation instance or the animation name.
         """
+        self.clear_sprites()
         if type(animation) == str:
             animation = self.animations[animation]
+        
         self.render_sprites = animation
         
         if type(animation) is Timed_Animation:
@@ -202,10 +171,9 @@ class Linto_UI:
         Keyword arguments:
         mode -- Mode name or instance.
         """
+        
         if type(mode) == str:
             mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
-        self.overlay_sprites = pg.sprite.OrderedUpdates()
-        self.overlay_sprites.add(DateTime([10,10]))
         mode.set(self.current_mode)
         self.current_mode = mode
     
@@ -214,16 +182,17 @@ class Linto_UI:
 
         Keyword arguments:
         state_name -- state name.
-        """    
+        """
         self.states[state_name].set()
         self.current_mode.current_state = self.states[state_name]
+        
 
     def set_buttons(self, buttons):
         """ Clear visible buttons and display buttons in the list 
         
         Keyword arguments:
         buttons -- a list of Buttons"""
-        self.buttons_visible = pg.sprite.Group()
+        self.buttons_visible = pg.sprite.OrderedUpdates()
         self.buttons_visible.add(buttons)
 
     def spotter_status(self, status : bool):
@@ -234,67 +203,72 @@ class Linto_UI:
         """
         self.event_manager.publish(self.config["wuw_topic"], '{"on":"%(DATE)", "value":"'+ str(status) + '"}')
 
-    def show_side_panel(self):
-        self.panel_visible = True
-        self.linto_offset = 0
+    def update_sprites(self):
+        #Updating sprites
+        self.render_sprites.update()
+        self.overlay_sprites.update()
+        self.buttons_visible.update()
+    
+    def clear_sprites(self):
+        """Clear sprites location"""
+        # TODO Clear only updated buttons
+        self.buttons_visible.clear(self.screen, self.background)
+        
+        # Clear render_sprite TODO: clear only animated or moving sprites
+        rects = []
+        for sprite  in self.render_sprites.sprites():
+            intersect = False
+            for rect in rects:
+                if rect.contains(sprite.rect):
+                    intersect = True
+                    break
+            if not intersect:
+                rects.append(sprite.rect)
+        for rect in rects:
+            self.screen.blit(self.background, rect[:2], area=rect)
 
-    def hide_side_panel(self):
-        self.panel_visible = False
-        self.linto_offset = 160
+        self.overlay_sprites.clear(self.screen, self.background)
+
+    def draw_sprites(self):
+        """Draw all visible sprites and return rect of changed areas"""
+        updated_rects = []
+
+        # Drawing
+        rect = self.render_sprites.draw(self.screen)
+        if rect is not None:
+            updated_rects.extend(rect)
+        rect = self.overlay_sprites.draw(self.screen)
+        if rect is not None:
+            updated_rects.extend(rect)
+        rect = self.buttons_visible.draw(self.screen)
+        updated_rects.extend(rect)
+
+        #print("Updated :{}\r".format(len(updated_rects)), end='')
+        return updated_rects
+
+    def inputs(self):
+        for event in pg.event.get():
+            if event.type in [pg.MOUSEBUTTONUP]:
+                mouse_sprite = pg.sprite.Sprite()
+                mouse_sprite.rect = pg.Rect( event.pos[0] -1, event.pos[1]-1, 2,2)
+                collided = pg.sprite.spritecollide(mouse_sprite, self.buttons_visible, False)
+                for sprite in collided:
+                    sprite.clicked()
+            if event.type in [pg.KEYUP] and event.key == pg.K_ESCAPE:
+                self.event_manager.end()
+                exit()
 
     def run(self):
         """ Main loop of the program. Update sprites and catch events. 
         """
         clock = pg.time.Clock()
-        mouse_sprite = pg.sprite.Sprite()
-        self.linto_offset = 160
-        self.panel_offset = self.linto_surface.get_width()
-        self.panel_visible = False
-        self.current_offset = 160
         while True:
-            self.screen.blit(self.background, [0,0])
-            self.render_sprites.update()
-            self.overlay_sprites.update()
-            self.linto_surface.fill(BACKGROUND_COLOR)
-            if len(self.render_sprites) > 0:
-                self.render_sprites.draw(self.linto_surface)
-
-            self.buttons_visible.update()
-            self.buttons_visible.draw(self.linto_surface)
-            
-            if self.current_offset < self.linto_offset:
-                self.current_offset += 6
-                if self.current_offset > self.linto_offset:
-                    self.current_offset = self.linto_offset
-            elif self.current_offset > self.linto_offset:
-                self.current_offset -= 6
-                if self.current_offset < self.linto_offset:
-                    self.current_offset = self.linto_offset
-
-            self.screen.blit(self.linto_surface, [self.current_offset,0])
-
-            if self.panel_visible or self.current_offset != self.linto_offset:
-                self.screen.blit(self.panel_surface, [self.panel_offset + self.current_offset * 2, 0])
-            
-            self.overlay_sprites.draw(self.screen)
-            pg.display.flip()
-
-            # Touch screen event manager
-            for event in pg.event.get():
-                if event.type in [pg.MOUSEBUTTONUP]:
-                    mouse_sprite.rect = pg.Rect( event.pos[0] - self.linto_offset -1, event.pos[1]-1, 2,2)
-                    print("mouse_sprite", mouse_sprite.rect)
-                    collided = pg.sprite.spritecollide(mouse_sprite, self.buttons_visible, False)
-                    for sprite in collided:
-                        sprite.clicked()
-                if event.type in [pg.KEYUP] and event.key == pg.K_ESCAPE:
-                    self.event_manager.end()
-                    exit()
-                if event.type in [pg.KEYUP] and event.key == pg.K_LEFT:
-                    self.show_side_panel()
-                if event.type in [pg.KEYUP] and event.key == pg.K_RIGHT:
-                    self.hide_side_panel()
+            self.clear_sprites()
+            self.update_sprites()
+            rects = self.draw_sprites()
+            pg.display.update()
             clock.tick(FPS)
+            self.inputs()
 
 def main():
     config = configparser.ConfigParser()

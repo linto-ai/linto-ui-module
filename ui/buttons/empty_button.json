@@ -1,7 +1,5 @@
 {
     "name" : "empty_button",
-    "type" : "single",
-    "nb_frames" : 1,
-    "frame_width" : 307,
+    "type" : "void",
     "rect" : [0.5,0.5,0.5,0.5]
 }

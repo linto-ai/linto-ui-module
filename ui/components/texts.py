@@ -3,6 +3,7 @@ import time
 import datetime
 
 class TextBox(pg.sprite.Sprite):
+    updated = False
     font_name = "Comic Sans MS"
     font_size = 25
     color = (125,125,125)
@@ -20,6 +21,7 @@ class TextBox(pg.sprite.Sprite):
     def _create_surface(self):
         self.image = self.font.render(self.text, True, self.color)
         self.rect = pg.Rect(self.pos[0], self.pos[1], self.image.get_rect().width, self.image.get_rect().height)
+        self.updated = True
 
     def set_text(self, text):
         self.text = text
@@ -60,9 +62,10 @@ class DateTime(TextBox):
     font_size = 40
     color = (75,75,75)
     def __init__(self, pos):
-        super().__init__(datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'), pos)
+        super().__init__(datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S') + ' ', pos)
     def update(self):
-        self.set_text(datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        self.set_text(datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')+ ' ')
+        self.updated = True
 
 
 class Frame(pg.sprite.Sprite):

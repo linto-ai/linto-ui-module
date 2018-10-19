@@ -4,12 +4,13 @@ import json
 from typing import Union
 
 
+
 class Sprite(pg.sprite.Sprite):
     """ Base Sprite class that load an image and offers methods to change position and size.
     """
+    updated = False
     def __init__(self, sprite_path: str):
         """ Load sprite image.
-
 
         Keyword arguments:
         sprite_path -- the sprite image path
@@ -37,6 +38,7 @@ class Sprite(pg.sprite.Sprite):
             offset_y += self.rect.h/2
         self.rect.x = pos[0] - offset_x
         self.rect.y = pos[1] - offset_y
+        self.updated = True
 
     def set_rect(self, surface : pg.Surface, rect : list, center=False):
         """ Set sprite rect. rect is size and position. Note that value are
@@ -61,6 +63,7 @@ class Sprite(pg.sprite.Sprite):
         """
         self.image = pg.transform.scale(self.image, [int(v) for v in new_size])
         self.rect = self.image.get_rect()
+        self.updated = True
 
 
 class Bouncing_Sprite(Sprite):
@@ -89,8 +92,7 @@ class Bouncing_Sprite(Sprite):
         self.rect.y = int(self.pos + self.curr_offset)
         if abs(self.curr_offset) > self.amplitude:
             self.direction = not self.direction
-        
-        
+        self.updated = True        
 
 class Animated_Sprite(Sprite):
     """ An animated sprite."""
@@ -145,6 +147,7 @@ class Animated_Sprite(Sprite):
             new_frames.append(f)
         self.frames = new_frames
         self.image = self.frames[0]
+        self.updated = True
 
     def update(self):
         self.frame_counter += 1
@@ -152,6 +155,7 @@ class Animated_Sprite(Sprite):
             self.frame_counter = 0
             self.curr_frame = (self.curr_frame + 1) % self.nb_frames
             self.image = self.frames[self.curr_frame]
+            self.updated = True
 
 
 def SpriteFactory(sprite_path : str, mode : str, surface : pg.Surface, rect : list) -> Sprite :

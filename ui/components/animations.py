@@ -16,7 +16,6 @@ class Animation(pg.sprite.OrderedUpdates):
         self.manifest = manifest
         self.load_manifest()
     def load_manifest(self):
-        print("ICI2", os.path.join(ROOT_PATH, "placeholders.json"))
         try:
             placeholder_man = json.load(open(os.path.join(ROOT_PATH, "placeholders.json"), 'r'))
             draw_order = placeholder_man["draw_order"]
