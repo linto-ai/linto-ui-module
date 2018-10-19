@@ -4,5 +4,5 @@
         "nb_frames" : 4,
         "frame_width" : 220, 
         "state_values" : ["full", "mid", "low", "silenced"], 
-        "rect" : [0.9,0.9,0.15,0.15]
+        "rect" : [0.75,0.9,0.09,0.15]
 }

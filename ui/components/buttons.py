@@ -28,6 +28,7 @@ class Empty_Button(pg.sprite.Sprite, Clickable):
         if center:
             self.rect[0] -= self.rect[2] // 2
             self.rect[1] -= self.rect[3] // 2
+        self.rect = pg.Rect(self.rect)
 
 
 
