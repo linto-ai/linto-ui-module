@@ -192,6 +192,7 @@ class Linto_UI:
         
         Keyword arguments:
         buttons -- a list of Buttons"""
+        self.clear_sprites()
         self.buttons_visible = pg.sprite.OrderedUpdates()
         self.buttons_visible.add(buttons)
 
@@ -211,12 +212,20 @@ class Linto_UI:
     
     def clear_sprites(self):
         """Clear sprites location"""
-        # TODO Clear only updated buttons
-        self.buttons_visible.clear(self.screen, self.background)
-        
-        # Clear render_sprite TODO: clear only animated or moving sprites
         rects = []
+        # TODO Clear only updated buttons
+        self.overlay_sprites.clear(self.screen, self.background)
+        # Clear render_sprite TODO: clear only animated or moving sprites
         for sprite  in self.render_sprites.sprites():
+            intersect = False
+            for rect in rects:
+                if rect.contains(sprite.rect):
+                    intersect = True
+                    break
+            if not intersect:
+                rects.append(sprite.rect)
+        
+        for sprite in self.buttons_visible.sprites():
             intersect = False
             for rect in rects:
                 if rect.contains(sprite.rect):
@@ -226,8 +235,6 @@ class Linto_UI:
                 rects.append(sprite.rect)
         for rect in rects:
             self.screen.blit(self.background, rect[:2], area=rect)
-
-        self.overlay_sprites.clear(self.screen, self.background)
 
     def draw_sprites(self):
         """Draw all visible sprites and return rect of changed areas"""
