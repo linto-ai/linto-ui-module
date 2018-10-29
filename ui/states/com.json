@@ -12,7 +12,11 @@
             }
         },
         "button_clicked": {
-                     
-        }
+            "empty_button": {
+                "clicked": {
+                    "state": "idle"
+                }
+            }
+        }   
     }
 }

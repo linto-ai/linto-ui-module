@@ -235,6 +235,7 @@ class Linto_UI:
                 rects.append(sprite.rect)
         for rect in rects:
             self.screen.blit(self.background, [rect[0], rect[1]], area=rect)
+        return rects
 
     def draw_sprites(self):
         """Draw all visible sprites and return rect of changed areas"""
@@ -265,14 +266,32 @@ class Linto_UI:
                 self.event_manager.end()
                 exit()
 
+    """def check_intersect(self, rlist: list):
+        cleared = []
+        for rect1 in rlist:
+            for rect2 in rlist:
+                if rect1 == rect2:
+                    continue
+                if rect2.contains(rect1):
+                    if rect1 in cleared:
+                        cleared.remove(rect1)
+                    if rect2 not in cleared:
+                        cleared.append(rect2)
+                    break
+            cleared.append(rect1)
+            return cleared"""
+
+
     def run(self):
         """ Main loop of the program. Update sprites and catch events. 
         """
         clock = pg.time.Clock()
+        self.spotter_status(True)
+
         while True:
-            self.clear_sprites()
+            rects = self.clear_sprites()
             self.update_sprites()
-            rects = self.draw_sprites()
+            rects.extend(self.draw_sprites())
             pg.display.update()
             clock.tick(FPS)
             self.inputs()
