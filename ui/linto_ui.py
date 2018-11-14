@@ -29,6 +29,13 @@ class Linto_UI:
     def __init__(self, args, config):
         self.config = config
 
+        #pygame init
+        pg.mixer.pre_init(16000, -16, 1,1024)
+        pg.mixer.init()
+        pg.display.init()
+        pg.font.init()
+        pg.init()
+
         # Init display
         self.screen_size = args.resolution
         self.screen = self.init_gui(self.screen_size, args.fullscreen)
@@ -67,6 +74,9 @@ class Linto_UI:
         
         self.set_mode('command')
         self.event_manager.start()
+
+        # Sounds
+        self.sound_bank = {}
         
     def init_gui(self,resolution, fullscreen: bool):
         """ Init pygame modules and set the display surface
@@ -75,8 +85,7 @@ class Linto_UI:
         resolution -- set the display resolution [width, heigth]
         fullscreen -- (boolean) Set display to fullscreen
         """
-        pg.display.init()
-        pg.font.init()
+        
         if not self.config['debug'] == 'true':
             pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
         display = pg.display.Info()
@@ -253,6 +262,20 @@ class Linto_UI:
 
         #print("Updated :{}\r".format(len(updated_rects)), end='')
         return updated_rects
+
+    def play_sound(self, name):
+        logging.debug("playing sound.")
+        if name not in self.sound_bank:
+            file_path = FILE_PATH + '/sounds/'+ name +'.ogg'
+            try:
+                sound = pg.mixer.Sound(file_path)
+                self.sound_bank[name] = sound
+                sound.play()
+            except:
+                logging.error("Cannot load sound file for {} at {}".format(name, file_path))
+        else:
+            print('!')
+            self.sound_bank[name].play()
 
     def inputs(self):
         for event in pg.event.get():

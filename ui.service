@@ -1,0 +1,13 @@
+[Unit]
+Description=LinTO gui service
+After=mutli-user.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/usr/local/bin
+ExecStart=/usr/local/bin/linto_ui
+
+[Install]
+WantedBy=multi-user.target

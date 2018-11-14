@@ -2,11 +2,9 @@ import os
 import threading
 import datetime
 import logging
-import alsaaudio
 import json
 import subprocess
 
-import pygame as pg
 import paho.mqtt.client as mqtt
 import tenacity
 
@@ -24,10 +22,6 @@ class Event_Manager(threading.Thread):
         self.alive = True
         self.connected = True
         self.broker = None
-
-        #Audio init
-        mixer = alsaaudio.Mixer()
-        mixer.setvolume(60)
 
     @tenacity.retry(wait=tenacity.wait_fixed(5),
             stop=tenacity.stop_after_attempt(24),
@@ -154,7 +148,7 @@ class Event_Manager(threading.Thread):
                 self.publish(actions["publish"]['topic'],
                                     actions["publish"]['message'])
             elif action == 'sound':
-                self.play_sound(actions["sound"])
+                self.ui.play_sound(actions["sound"])
             elif action == 'volume':
                 self.change_volume(actions['volume'])
             elif action == 'mode':
@@ -168,13 +162,9 @@ class Event_Manager(threading.Thread):
                 self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value"="' + self.ui.animations[actions['wuw_spotting']] + '"}')
     
     def change_volume(self, value):
-        mixer = alsaaudio.Mixer()
-        mixer.setvolume(value)
+        pass
 
-    def play_sound(self, name):
-        logging.debug("playing sound")
-        file_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/sounds/'+ name +'.wav'
-        subprocess.Popen(['aplay', file_path])
+    
 
     def run(self):
         while self.alive:
