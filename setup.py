@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="linto_ui",
-    version="0.2.1",
+    version="0.2.2",
     include_package_data=True,
     packages=find_packages(),
     entry_points = {
@@ -12,7 +12,6 @@ setup(
     install_requires=[
         'pygame',
         'tenacity',
-        'pyalsaaudio',
         'paho-mqtt'
     ],
     package_data={},

@@ -15,6 +15,9 @@ from typing import Union
 import pygame as pg
 from pygame.locals import *
 
+import wave
+import pyaudio
+
 from ui.components.animations import Animation, Timed_Animation
 from ui.components.buttons import Button_Factory
 from ui.components.eventmanager import Event_Manager
@@ -28,13 +31,8 @@ FPS = 30
 class Linto_UI:
     def __init__(self, args, config):
         self.config = config
-
-        #pygame init
-        pg.mixer.pre_init(16000, -16, 1,1024)
-        pg.mixer.init()
         pg.display.init()
         pg.font.init()
-        pg.init()
 
         # Init display
         self.screen_size = args.resolution
@@ -75,8 +73,8 @@ class Linto_UI:
         self.set_mode('command')
         self.event_manager.start()
 
-        # Sounds
-        self.sound_bank = {}
+        # Sound init
+        self.audio = pyaudio.PyAudio()
         
     def init_gui(self,resolution, fullscreen: bool):
         """ Init pygame modules and set the display surface
@@ -260,22 +258,34 @@ class Linto_UI:
         rect = self.buttons_visible.draw(self.screen)
         updated_rects.extend(rect)
 
-        #print("Updated :{}\r".format(len(updated_rects)), end='')
         return updated_rects
 
     def play_sound(self, name):
-        logging.debug("playing sound.")
-        if name not in self.sound_bank:
-            file_path = FILE_PATH + '/sounds/'+ name +'.ogg'
+        def sound_playing(audio, name):
+            logging.debug("playing sound with pyaudio")
+            file_path = os.path.join(FILE_PATH, 'sounds', name +'.wav')
             try:
-                sound = pg.mixer.Sound(file_path)
-                self.sound_bank[name] = sound
-                sound.play()
+                f = wave.open(file_path)
             except:
-                logging.error("Cannot load sound file for {} at {}".format(name, file_path))
-        else:
-            print('!')
-            self.sound_bank[name].play()
+                logging.error("Could not open {}".format(file_path))
+                return
+            logging.debug("Sample_rate={}, channel={}, samp_width={}".format(f.getframerate(),
+                                                                f.getnchannels(), 
+                                                                f.getsampwidth()))
+            stream = audio.open(format = audio.get_format_from_width(f.getsampwidth()),  
+                    channels = f.getnchannels(),  
+                    rate = f.getframerate(),  
+                    output = True)
+            data = f.readframes(1024)
+
+            while data:
+                stream.write(data)
+                data = f.readframes(1024)
+        
+            stream.stop_stream()
+            stream.close()
+        t = threading.Thread(target=sound_playing, args=(self.audio,name,))
+        t.start()
 
     def inputs(self):
         for event in pg.event.get():
@@ -288,22 +298,6 @@ class Linto_UI:
             if event.type in [pg.KEYUP] and event.key == pg.K_ESCAPE:
                 self.event_manager.end()
                 exit()
-
-    """def check_intersect(self, rlist: list):
-        cleared = []
-        for rect1 in rlist:
-            for rect2 in rlist:
-                if rect1 == rect2:
-                    continue
-                if rect2.contains(rect1):
-                    if rect1 in cleared:
-                        cleared.remove(rect1)
-                    if rect2 not in cleared:
-                        cleared.append(rect2)
-                    break
-            cleared.append(rect1)
-            return cleared"""
-
 
     def run(self):
         """ Main loop of the program. Update sprites and catch events. 
