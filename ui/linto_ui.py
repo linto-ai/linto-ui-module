@@ -185,6 +185,7 @@ class Linto_UI:
             mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
         mode.set(self.current_mode)
         self.current_mode = mode
+        self.clear_screen()
     
     def set_state(self, state_name: str):
         """ Change the current state
@@ -196,7 +197,6 @@ class Linto_UI:
         self.states[state_name].set()
         self.current_mode.current_state = self.states[state_name]
         self.clear_screen()
-        
 
     def set_buttons(self, buttons):
         """ Clear visible buttons and display buttons in the list 
@@ -310,8 +310,7 @@ class Linto_UI:
         """
         clock = pg.time.Clock()
         self.spotter_status(True)
-
-        while True:
+        while True:                
             rects = self.clear_sprites()
             self.update_sprites()
             rects.extend(self.draw_sprites())
