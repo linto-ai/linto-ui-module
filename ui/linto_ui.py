@@ -25,7 +25,7 @@ from ui.components.states import Mode, State
 from ui.components.texts import DateTime, MessageFrame, TextBox, MeetingTimer
 
 FILE_PATH = os.path.dirname(os.path.abspath(__file__))
-BACKGROUND_COLOR = (230,230,210)
+BACKGROUND_COLOR = (200,200,200)
 FPS = 30
 
 class Linto_UI:
@@ -38,14 +38,18 @@ class Linto_UI:
         self.screen_size = args.resolution
         self.screen = self.init_gui(self.screen_size, args.fullscreen)
         self.background = pg.Surface(self.screen_size, flags=pg.HWSURFACE)
-        self.background.fill(BACKGROUND_COLOR)
+
+        self.background.blit(pg.image.load(os.path.join(FILE_PATH, "sprites", "back.jpg")), [0,0])
+        
+        #self.background.fill(BACKGROUND_COLOR)
         self.screen.blit(self.background, [0,0])
         pg.display.update()
         self.center_pos = [v//2 for v in self.screen_size]
             
         self.render_sprites = pg.sprite.OrderedUpdates()
         self.overlay_sprites = pg.sprite.OrderedUpdates()
-        self.overlay_sprites.add(DateTime([10,10]))
+        if self.config['time'] and not args.notime:
+            self.overlay_sprites.add(DateTime([10,10]))
         self.updated_rects = []
 
         #Animations
@@ -148,7 +152,6 @@ class Linto_UI:
         for file_name in os.listdir(os.path.join(FILE_PATH,folder)):
             file_path = os.path.join(FILE_PATH, folder, file_name)
             if file_path.endswith('.json'):
-                print(file_path)
                 button = Button_Factory(file_path, self.screen, self.event_manager)
                 self.buttons[button.id] = button
 
@@ -158,7 +161,6 @@ class Linto_UI:
         Keyword arguments:
         animation -- Either an animation instance or the animation name.
         """
-        self.clear_sprites()
         if type(animation) == str:
             animation = self.animations[animation]
         
@@ -190,8 +192,10 @@ class Linto_UI:
         Keyword arguments:
         state_name -- state name.
         """
+        
         self.states[state_name].set()
         self.current_mode.current_state = self.states[state_name]
+        self.clear_screen()
         
 
     def set_buttons(self, buttons):
@@ -199,7 +203,6 @@ class Linto_UI:
         
         Keyword arguments:
         buttons -- a list of Buttons"""
-        self.clear_sprites()
         self.buttons_visible = pg.sprite.OrderedUpdates()
         self.buttons_visible.add(buttons)
 
@@ -243,6 +246,9 @@ class Linto_UI:
         for rect in rects:
             self.screen.blit(self.background, [rect[0], rect[1]], area=rect)
         return rects
+    
+    def clear_screen(self):
+        self.screen.blit(self.background, [0,0])
 
     def draw_sprites(self):
         """Draw all visible sprites and return rect of changed areas"""
@@ -321,6 +327,7 @@ def main():
     parser = argparse.ArgumentParser(description='GUI interface for the LinTo device')
     parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[800,480], help="Screen resolution")
     parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
+    parser.add_argument('-nt', '--notime', help="Hide timestamp", action="store_true")
     args = parser.parse_args()
 
     ui = Linto_UI(args, config)
