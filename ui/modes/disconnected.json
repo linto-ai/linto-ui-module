@@ -5,7 +5,6 @@
         "broker_message": {
             "lintoclient/connected": {
                 "any": {
-                    "ring" : "ring_green",
                     "mode" : "last"
                 }
             }

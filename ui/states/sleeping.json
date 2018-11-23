@@ -1,7 +1,7 @@
 {
     "state_name" : "sleeping", 
     "animation" : "sleeping",
-    "buttons" : ["empty_button", "mute_button", "volume_button"],
+    "buttons" : ["empty_button", "mute_button"],
     "wuw_spotting" : false,
     "events" : {
         "broker_message": {

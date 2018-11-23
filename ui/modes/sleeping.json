@@ -5,8 +5,7 @@
         "broker_message": {
             "lintoclient/disconnected" : {
                 "any": {
-                    "mode" : "disconnected",
-                    "ring" : "ring_red"
+                    "mode" : "disconnected"
                 }
             }
         },

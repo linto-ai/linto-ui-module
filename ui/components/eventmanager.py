@@ -136,8 +136,6 @@ class Event_Manager(threading.Thread):
             self.broker.publish(topic, payload)
 
     def _resolve_action(self, actions, payload = dict()):
-        if 'ring' in actions.keys():
-                self.ui.set_ring(actions['ring'])
         if 'connexion' in actions.keys():
                 self.connected = actions['connexion']
         elif not self.connected:
@@ -162,9 +160,7 @@ class Event_Manager(threading.Thread):
                 self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value"="' + self.ui.animations[actions['wuw_spotting']] + '"}')
     
     def change_volume(self, value):
-        pass
-
-    
+        pass #TBI
 
     def run(self):
         while self.alive:

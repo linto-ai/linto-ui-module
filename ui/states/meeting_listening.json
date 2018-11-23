@@ -1,7 +1,7 @@
 {
     "state_name" : "meeting_listening", 
     "animation" : "meeting_listening",
-    "buttons" : ["mute_button", "volume_button", "cancel_button"],
+    "buttons" : ["mute_button", "cancel_button"],
     "wuw_spotting" : false,
     "events" : {
         "broker_message": {

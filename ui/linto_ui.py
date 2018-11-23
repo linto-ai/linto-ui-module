@@ -39,9 +39,9 @@ class Linto_UI:
         self.screen = self.init_gui(self.screen_size, args.fullscreen)
         self.background = pg.Surface(self.screen_size, flags=pg.HWSURFACE)
 
+        #Background image
         self.background.blit(pg.image.load(os.path.join(FILE_PATH, "sprites", "back.jpg")), [0,0])
         
-        #self.background.fill(BACKGROUND_COLOR)
         self.screen.blit(self.background, [0,0])
         pg.display.update()
         self.center_pos = [v//2 for v in self.screen_size]
@@ -168,10 +168,12 @@ class Linto_UI:
         
         if type(animation) is Timed_Animation:
             t= threading.Thread(target = self._timed_animation_callback, args=(animation.duration,))
+            self.clear_screen()
             t.start()
 
     def _timed_animation_callback(self, duration):
         time.sleep(duration)
+        self.clear_screen()
         self.play_anim(self.current_mode.current_state.animation)
 
     def set_mode(self, mode):
