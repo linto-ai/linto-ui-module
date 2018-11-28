@@ -12,6 +12,11 @@
                 "start_meeting" : {
                     "mode" : "meeting"
                 }
+            },
+            "lintoclient/volume": {
+                "any" : {
+                    "volume_set" : "value"
+                }
             }
 
         },
@@ -26,17 +31,17 @@
                 }
             },   
             "volume_button": {
-                "full": {
-                    "volume": 100
+                "0": {
+                    "volume": "80"
                 },
-                "mid": {
-                    "volume": 50
+                "1": {
+                    "volume": "60"
                 },
-                "low": {
-                    "volume": 25
+                "2": {
+                    "volume": "30"
                 },
-                "silenced": {
-                    "volume": 0
+                "3": {
+                    "volume": "0"
                 }
             }
         }

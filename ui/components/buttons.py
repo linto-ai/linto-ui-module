@@ -57,9 +57,17 @@ class State_Button(Animated_Sprite, Clickable):
     def clicked(self):
         self.curr_frame = (self.curr_frame + 1) % self.nb_frames
         self.image = self.frames[self.curr_frame]
-        self.event_manager.touch_input(self.id, self.curr_frame)
+        self.event_manager.touch_input(self.id, str(self.curr_frame))
         self.updated = True
-
+    
+    def set_state(self, state):
+        if 0 > state >= self.nb_frames:
+            return
+        self.curr_frame = state
+        self.image = self.frames[self.curr_frame]
+        self.event_manager.touch_input(self.id, str(self.curr_frame))
+        self.updated = True
+        
 class Switch_Button(State_Button):
     """ A button that alternate between two states, returns true or false when clicked. Default state is false"""
     def __init__(self, sprite_path: str, manifest_path: str, event_manager):
@@ -70,6 +78,10 @@ class Switch_Button(State_Button):
         self.image = self.frames[self.curr_frame]
         self.event_manager.touch_input(self.id, 'true' if self.curr_frame else 'false')
         self.updated = True
+    
+    def set_state(self, state: bool):
+        if state != self.curr_frame:
+            self.clicked()
 
 class Animated_Button(Animated_Sprite, Clickable):
     def __init__(self, sprite_path: str, manifest_path: str, event_manager):

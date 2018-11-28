@@ -31,6 +31,7 @@ FPS = 30
 class Linto_UI:
     def __init__(self, args, config):
         self.config = config
+        self.args = args
         pg.display.init()
         pg.font.init()
 
@@ -88,7 +89,7 @@ class Linto_UI:
         fullscreen -- (boolean) Set display to fullscreen
         """
         
-        if not self.config['debug'] == 'true':
+        if not self.config['debug'] == 'true' and not self.args.debug:
             pg.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
         display = pg.display.Info()
         self.display_width = display.current_w
@@ -168,12 +169,10 @@ class Linto_UI:
         
         if type(animation) is Timed_Animation:
             t= threading.Thread(target = self._timed_animation_callback, args=(animation.duration,))
-            self.clear_screen()
             t.start()
 
     def _timed_animation_callback(self, duration):
         time.sleep(duration)
-        self.clear_screen()
         self.play_anim(self.current_mode.current_state.animation)
 
     def set_mode(self, mode):
@@ -187,7 +186,6 @@ class Linto_UI:
             mode = self.current_mode.previous_mode if mode == "last" else self.modes[mode]
         mode.set(self.current_mode)
         self.current_mode = mode
-        self.clear_screen()
     
     def set_state(self, state_name: str):
         """ Change the current state
@@ -198,7 +196,6 @@ class Linto_UI:
         
         self.states[state_name].set()
         self.current_mode.current_state = self.states[state_name]
-        self.clear_screen()
 
     def set_buttons(self, buttons):
         """ Clear visible buttons and display buttons in the list 
@@ -284,11 +281,11 @@ class Linto_UI:
                     channels = f.getnchannels(),  
                     rate = f.getframerate(),  
                     output = True)
-            data = f.readframes(1024)
+            data = f.readframes(512)
 
             while data:
                 stream.write(data)
-                data = f.readframes(1024)
+                data = f.readframes(512)
         
             stream.stop_stream()
             stream.close()
@@ -313,9 +310,9 @@ class Linto_UI:
         clock = pg.time.Clock()
         self.spotter_status(True)
         while True:                
-            rects = self.clear_sprites()
+            self.clear_screen()
             self.update_sprites()
-            rects.extend(self.draw_sprites())
+            self.draw_sprites()
             pg.display.update()
             clock.tick(FPS)
             self.inputs()
@@ -324,13 +321,13 @@ def main():
     config = configparser.ConfigParser()
     config.read(os.path.join(FILE_PATH,"config.conf"))
     config = config['CONFIG']
-    logging.basicConfig(level=logging.DEBUG if config['debug'] == 'true' else logging.INFO, format="%(levelname)8s %(asctime)s %(message)s ")
     parser = argparse.ArgumentParser(description='GUI interface for the LinTo device')
     parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[800,480], help="Screen resolution")
     parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
     parser.add_argument('-nt', '--notime', help="Hide timestamp", action="store_true")
+    parser.add_argument('-db', '--debug', help="Debug mode", action="store_true")
     args = parser.parse_args()
-
+    logging.basicConfig(level=logging.DEBUG if config['debug'] == 'true' or args.debug else logging.INFO, format="%(levelname)8s %(asctime)s %(message)s ")
     ui = Linto_UI(args, config)
     ui.run()
 

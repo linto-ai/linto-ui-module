@@ -1,7 +1,7 @@
 {
     "state_name" : "idle", 
     "animation" : "idle",
-    "buttons" : ["mute_button", "empty_button"],
+    "buttons" : ["mute_button", "empty_button", "volume_button"],
     "wuw_spotting" : true,
     "events" : {
         "broker_message": {
@@ -24,6 +24,11 @@
             "lintoclient/ask": {
                 "any": {
                     "state": "asking"
+                }
+            },
+            "lintoclient/mute": {
+                "any": {
+                    "mute" : true
                 }
             }
         },

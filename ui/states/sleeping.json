@@ -1,14 +1,31 @@
 {
     "state_name" : "sleeping", 
     "animation" : "sleeping",
-    "buttons" : ["empty_button", "mute_button"],
+    "buttons" : ["empty_button", "mute_button", "volume_button"],
     "wuw_spotting" : false,
     "events" : {
         "broker_message": {
-            
+            "lintoclient/unmute": {
+                "any": {
+                    "mute" : false
+                }
+            }
         },
         "button_clicked": {
-            
+            "volume_button": {
+                "0": {
+                    "volume": "80"
+                },
+                "1": {
+                    "volume": "60"
+                },
+                "2": {
+                    "volume": "30"
+                },
+                "3": {
+                    "volume": "0"
+                }
+            }
         }
     }
 }

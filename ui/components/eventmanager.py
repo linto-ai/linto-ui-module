@@ -7,6 +7,7 @@ import subprocess
 
 import paho.mqtt.client as mqtt
 import tenacity
+import alsaaudio
 
 from ui.components import ROOT_PATH
 
@@ -22,6 +23,7 @@ class Event_Manager(threading.Thread):
         self.alive = True
         self.connected = True
         self.broker = None
+        self.change_volume(30)
 
     @tenacity.retry(wait=tenacity.wait_fixed(5),
             stop=tenacity.stop_after_attempt(24),
@@ -149,6 +151,10 @@ class Event_Manager(threading.Thread):
                 self.ui.play_sound(actions["sound"])
             elif action == 'volume':
                 self.change_volume(actions['volume'])
+            elif action == 'volume_set':
+                if "value" in payload.keys():
+                    volume = int(payload["value"])
+                self.set_volume(payload)
             elif action == 'mode':
                 self.ui.set_mode(actions['mode'])
             elif action == 'state':
@@ -157,10 +163,47 @@ class Event_Manager(threading.Thread):
                 self.ui.play_anim(self.ui.animations[actions['play']])
             elif action == 'wuw_spotting':
                 #TODO change publish to accept dict and add date
-                self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value"="' + self.ui.animations[actions['wuw_spotting']] + '"}')
+                self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value":"' + self.ui.animations[actions['wuw_spotting']] + '"}')
+            elif action == 'mute':
+                self.mute(actions['mute'])
     
-    def change_volume(self, value):
-        pass #TBI
+    def change_volume(self, volume):
+        """ The volume value has been changed through the GUI
+        """
+        try:
+            volume = int(volume)
+        except:
+            logging.warning("Invalid volume value {}".format(volume))
+            return
+        if 0 > volume > 100:
+            return
+        mixer = alsaaudio.Mixer()
+        mixer.setvolume(volume)
+        self.publish("ui/volume", '{"on": "%(DATE)", "value":"' + str(volume) + '"}')
+
+    def set_volume(self, volume = int):
+        """ Change the volume from outside
+        """
+        volume_button = [button for button in self.ui.buttons_visible if button.id == "volume_button"]
+        if volume_button:
+            volume_button = volume_button[0]
+            if volume == 0:
+                volume_button.set_state(3)
+            elif 0 < volume <= 30:
+                volume_button.set_state(2)
+            elif 30 < volume <= 60:
+                volume_button.set_state(1)
+            elif 60 < volume:
+                volume_button.set_state(0)
+                if volume > 100:
+                    volume = 100
+            self.change_volume(volume)
+                
+
+    def mute(self, value):
+        mute_button = [button for button in self.ui.buttons_visible if button.id == "mute_button"]
+        if mute_button:
+            mute_button[0].set_state(value)
 
     def run(self):
         while self.alive:

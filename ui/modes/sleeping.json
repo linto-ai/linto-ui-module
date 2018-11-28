@@ -7,6 +7,11 @@
                 "any": {
                     "mode" : "disconnected"
                 }
+            },
+            "lintoclient/volume": {
+                "any" : {
+                    "volume_set" : "value"
+                }
             }
         },
         "button_clicked": {
@@ -17,6 +22,20 @@
                         "topic" : "ui/mute_off",
                         "message" : "{\"on\":\"%(DATE)\"}"
                     }
+                }
+            },   
+            "volume_button": {
+                "0": {
+                    "volume": "80"
+                },
+                "1": {
+                    "volume": "60"
+                },
+                "2": {
+                    "volume": "30"
+                },
+                "3": {
+                    "volume": "0"
                 }
             }
         }
