@@ -154,7 +154,7 @@ class Event_Manager(threading.Thread):
             elif action == 'volume_set':
                 if "value" in payload.keys():
                     volume = int(payload["value"])
-                self.set_volume(payload)
+                self.set_volume(volume)
             elif action == 'mode':
                 self.ui.set_mode(actions['mode'])
             elif action == 'state':
