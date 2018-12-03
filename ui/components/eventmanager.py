@@ -23,7 +23,7 @@ class Event_Manager(threading.Thread):
         self.alive = True
         self.connected = True
         self.broker = None
-        self.change_volume(30)
+        self.change_volume(80)
 
     @tenacity.retry(wait=tenacity.wait_fixed(5),
             stop=tenacity.stop_after_attempt(24),
