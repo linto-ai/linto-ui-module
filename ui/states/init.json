@@ -1,0 +1,24 @@
+{
+    "state_name" : "init", 
+    "animation" : "init",
+    "buttons" : ["empty_button"],
+    "wuw_spotting" : true,
+    "events" : {
+        "broker_message": {
+            "hotword/ready": {
+                "any":{
+                    "play": "waking_up",
+                    "state" : "idle"
+                }
+            }
+        },
+        "button_clicked": {
+            "empty_button": {
+                "clicked": {
+                    "play": "waking_up",
+                    "state": "idle"
+                }
+            }
+        }
+    }
+}

@@ -23,7 +23,6 @@ class Event_Manager(threading.Thread):
         self.alive = True
         self.connected = True
         self.broker = None
-        self.change_volume(80)
 
     @tenacity.retry(wait=tenacity.wait_fixed(5),
             stop=tenacity.stop_after_attempt(24),
@@ -159,13 +158,13 @@ class Event_Manager(threading.Thread):
                 self.ui.set_mode(actions['mode'])
             elif action == 'state':
                 self.ui.set_state(actions['state'])
-            elif action == 'play': 
-                self.ui.play_anim(self.ui.animations[actions['play']])
             elif action == 'wuw_spotting':
                 #TODO change publish to accept dict and add date
                 self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value":"' + self.ui.animations[actions['wuw_spotting']] + '"}')
             elif action == 'mute':
                 self.mute(actions['mute'])
+        if 'play' in actions.keys(): 
+            self.ui.play_anim(self.ui.animations[actions['play']])
     
     def change_volume(self, volume):
         """ The volume value has been changed through the GUI
@@ -184,9 +183,9 @@ class Event_Manager(threading.Thread):
     def set_volume(self, volume = int):
         """ Change the volume from outside
         """
-        volume_button = [button for button in self.ui.buttons_visible if button.id == "volume_button"]
+        volume_button = self.ui.buttons['volume_button']
         if volume_button:
-            volume_button = volume_button[0]
+            volume_button = volume_button
             if volume == 0:
                 volume_button.set_state(3)
             elif 0 < volume <= 30:
@@ -198,7 +197,10 @@ class Event_Manager(threading.Thread):
                 if volume > 100:
                     volume = 100
             self.change_volume(volume)
-                
+
+    def get_volume(self):
+        mixer = alsaaudio.Mixer()
+        return mixer.getvolume()[0]       
 
     def mute(self, value):
         mute_button = [button for button in self.ui.buttons_visible if button.id == "mute_button"]
@@ -206,6 +208,7 @@ class Event_Manager(threading.Thread):
             mute_button[0].set_state(value)
 
     def run(self):
+        self.set_volume(self.get_volume())
         while self.alive:
             self.broker = self.broker_connect()
             self.broker.loop_forever(retry_first_connection=True)

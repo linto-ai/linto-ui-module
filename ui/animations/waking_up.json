@@ -1,0 +1,31 @@
+{
+    "id": "waking_up",
+    "type" : "timed",
+    "duration" : 2.5,
+    "sprites" : {
+        "body" : {
+            "mode" : "static",
+            "sprite_name" : "linto"
+        },
+        "eyes" : {
+            "mode" : "animated",
+            "sprite_name" : "eyes_wakingup"
+        },
+        "mouth" : {
+            "mode" : "static",
+            "sprite_name": "mouth_strait"
+        },
+        "token_right" : {
+            "mode" : "none"
+        },
+        "token_center" : {
+            "mode" : "none"
+        },
+        "token_left" : {
+            "mode" : "none"
+        },
+        "center" : {
+            "mode" : "none"
+        }
+    }
+}

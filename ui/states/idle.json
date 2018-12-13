@@ -36,6 +36,12 @@
             "empty_button": {
                 "clicked": {
                     "play": "happy"
+                },
+                "w_clicked": {
+                    "publish": {
+                        "topic": "wuw_spotter/status",
+                        "message": "{\"on\":\"%(DATE)\", \"value\":\"detect_utterance\"}"
+                    }
                 }
             }
         }

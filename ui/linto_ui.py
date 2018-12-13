@@ -76,6 +76,7 @@ class Linto_UI:
         self.current_mode = None
         
         self.set_mode('command')
+        self.set_state('init')
         self.event_manager.start()
 
         # Sound init

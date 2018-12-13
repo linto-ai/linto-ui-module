@@ -1,7 +1,7 @@
 {
     "name" : "eyes_idle_anim",
-    "nb_frames" : 8, 
+    "nb_frames" : 3, 
     "frame_width" : 717, 
-    "frame_duration" : 30
+    "frame_duration" : 20
 
 }

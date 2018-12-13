@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="linto_ui",
-    version="0.2.5",
+    version="0.3.0",
     include_package_data=True,
     packages=find_packages(),
     entry_points = {

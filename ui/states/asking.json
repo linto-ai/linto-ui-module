@@ -9,7 +9,7 @@
                 "any":{
                     "state": "answering",
                     "publish": {
-                        "topic": "vad_spotter",
+                        "topic": "wuw_spotter/status",
                         "message": "{\"on\":\"%(DATE)\", \"value\":\"detect_utterance\"}"
                     }
                 }

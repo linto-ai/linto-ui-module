@@ -1,15 +1,23 @@
 import pygame as pg
 import json
+import time
 
 from ui.components.sprites import Sprite, Animated_Sprite
+
+DOUBLE_CLICK_DELAY = 0.5
 
 class Clickable:
     def __init__(self, manifest_path : str, event_manager: "Event Manager class"):
         self.event_manager = event_manager
         self._load_manifest(manifest_path)
-
+        self.last_clicked = 0
+    
     def clicked(self):
-        self.event_manager.touch_input(self.id, "clicked")
+        if time.time() - self.last_clicked < DOUBLE_CLICK_DELAY:
+            self.event_manager.touch_input(self.id, "w_clicked")
+        else:
+            self.event_manager.touch_input(self.id, "clicked")
+        self.last_clicked = time.time()
     
     def _load_manifest(self, manifest_path):
         with open(manifest_path, 'r') as f:
