@@ -49,7 +49,7 @@ class Linto_UI:
             
         self.render_sprites = pg.sprite.OrderedUpdates()
         self.overlay_sprites = pg.sprite.OrderedUpdates()
-        if self.config['time'] and not args.notime:
+        if args.time:
             self.overlay_sprites.add(DateTime([10,10]))
         self.updated_rects = []
 
@@ -325,7 +325,7 @@ def main():
     parser = argparse.ArgumentParser(description='GUI interface for the LinTo device')
     parser.add_argument('-r', dest='resolution', type=int, nargs=2,default=[800,480], help="Screen resolution")
     parser.add_argument('-fs', '--fullscreen', help="Put display on fullscreen with hardware acceleration", action="store_true")
-    parser.add_argument('-nt', '--notime', help="Hide timestamp", action="store_true")
+    parser.add_argument('-t', '--time', help="show timestamp", action="store_true")
     parser.add_argument('-db', '--debug', help="Debug mode", action="store_true")
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if config['debug'] == 'true' or args.debug else logging.INFO, format="%(levelname)8s %(asctime)s %(message)s ")

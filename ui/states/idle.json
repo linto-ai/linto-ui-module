@@ -18,10 +18,14 @@
             },
             "lintoclient/request/send": {
                 "any": {
-                    "state": "com"
+                    "state": "com", 
+                    "timeout": {
+                        "duration" : 8,
+                        "return_state" : "idle"
+                    }
                 }
             },
-            "lintoclient/ask": {
+            "tts/speaking/ask": {
                 "any": {
                     "state": "asking"
                 }

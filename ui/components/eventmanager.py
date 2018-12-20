@@ -4,6 +4,7 @@ import datetime
 import logging
 import json
 import subprocess
+import time
 
 import paho.mqtt.client as mqtt
 import tenacity
@@ -23,6 +24,7 @@ class Event_Manager(threading.Thread):
         self.alive = True
         self.connected = True
         self.broker = None
+        self.callback_guard = True #Prevent state callback to perform when an action has been performed during timeout counter
 
     @tenacity.retry(wait=tenacity.wait_fixed(5),
             stop=tenacity.stop_after_attempt(24),
@@ -71,7 +73,7 @@ class Event_Manager(threading.Thread):
         for topic in topics:
             self.broker.subscribe(topic)
             logging.debug("Subscribed to {}".format(topic))
-    
+
     def _on_broker_disconnect(self, client, userdata, rc):
         logging.debug("Disconnection")
         if self.broker is not None:
@@ -81,6 +83,7 @@ class Event_Manager(threading.Thread):
     def _on_broker_msg(self, client, userdata, message):
         """ Solve received MQTT broker messages.
         """
+        self.callback_guard = True
         topic = message.topic
         msg = message.payload.decode("utf-8")
         logging.debug("Received message %s on topic %s" % (msg,topic))
@@ -114,6 +117,12 @@ class Event_Manager(threading.Thread):
             print("Le temps alloué est terminé")
         else:
             print("Le temps alloué a été dépassé de {} minutes".format(time_left))
+
+    def state_callback(self, duration, return_state):
+        self.callback_guard = False
+        time.sleep(duration)
+        if not self.callback_guard:
+            self.ui.set_state(return_state)
 
 
     def touch_input(self, button, value):
@@ -158,6 +167,9 @@ class Event_Manager(threading.Thread):
                 self.ui.set_mode(actions['mode'])
             elif action == 'state':
                 self.ui.set_state(actions['state'])
+            elif action == 'timeout':
+                t = threading.Thread(target = self.state_callback, args=(actions['timeout']['duration'], actions['timeout']['return_state'],))
+                t.start()
             elif action == 'wuw_spotting':
                 #TODO change publish to accept dict and add date
                 self.publish(self.config['wuw_topic'], '{"on":"%(DATE)", "value":"' + self.ui.animations[actions['wuw_spotting']] + '"}')

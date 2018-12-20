@@ -15,15 +15,13 @@
             "sprite_name" : "mouth_talking"
         },
         "token_right" : {
-            "mode" : "none",
-            "sprite_name" : "question_mark"
+            "mode" : "none"
         },
         "token_center" : {
             "mode" : "none"
         },
         "token_left" : {
-            "mode" : "animated", 
-            "sprite_name" : "question_mark"
+            "mode" : "none"
         },
         "center" : {
             "mode" : "none"

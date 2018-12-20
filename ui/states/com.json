@@ -9,6 +9,11 @@
                 "any":{
                     "state": "speaking"
                 }
+            },
+            "tts/speaking/ask" :{
+                "any":{
+                    "state": "asking"
+                }
             }
         },
         "button_clicked": {
