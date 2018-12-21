@@ -6,8 +6,11 @@
     "events" : {
         "broker_message": {
             "utterance/stop" :{
-                "any":{
+                "thresholdReached":{
                     "state": "com"
+                },
+                "timeout":{
+                    "state": "idle"
                 }
             }
         },

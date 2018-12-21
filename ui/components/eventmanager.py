@@ -92,6 +92,8 @@ class Event_Manager(threading.Thread):
             payload = json.loads(msg)
             if 'value' in payload.keys():
                 value = payload['value']
+            elif 'reason' in payload.keys():
+                value = payload['reason']
         except:
             payload = msg
             logging.warning('Could not load json from message.')        
