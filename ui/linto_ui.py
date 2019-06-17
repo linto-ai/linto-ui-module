@@ -24,7 +24,11 @@ from ui.components.eventmanager import Event_Manager
 from ui.components.states import Mode, State
 from ui.components.texts import DateTime, MessageFrame, TextBox, MeetingTimer
 
-FILE_PATH = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    FILE_PATH = os.path.dirname(sys.executable)
+else:
+    FILE_PATH = os.path.dirname(__file__)
+
 BACKGROUND_COLOR = (200,200,200)
 FPS = 30
 
@@ -282,11 +286,11 @@ class Linto_UI:
                     channels = f.getnchannels(),  
                     rate = f.getframerate(),  
                     output = True)
-            data = f.readframes(512)
+            data = f.readframes(2048)
 
             while data:
                 stream.write(data)
-                data = f.readframes(512)
+                data = f.readframes(2048)
         
             stream.stop_stream()
             stream.close()
@@ -303,7 +307,7 @@ class Linto_UI:
                     sprite.clicked()
             if event.type in [pg.KEYUP] and event.key == pg.K_ESCAPE:
                 self.event_manager.end()
-                exit()
+                sys.exit(-1)
 
     def run(self):
         """ Main loop of the program. Update sprites and catch events. 
