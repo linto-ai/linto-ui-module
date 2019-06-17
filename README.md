@@ -7,7 +7,7 @@ It provides a set of animation to provide information regarding the current stat
 
 To get a copy a this repository:
 ```
-git clone ...
+git clone https://github.com/linto-ai/linto-ui-module.git
 ```
 
 ### Dependencies
