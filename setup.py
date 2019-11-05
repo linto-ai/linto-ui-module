@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 from setuptools import setup, find_packages
+import json
+
+with open("manifest.json", 'r') as f:
+    _version = json.load(f)["version"]
 
 setup(
     name="linto_ui",
-    version="0.3.1",
+    version=_version,
     include_package_data=True,
     packages=find_packages(),
     entry_points = {
